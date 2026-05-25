@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Deploy secrets ###
+.env
+.env.*
+*.local.properties
+application-local.properties
+application-*-local.properties
+
+### Railway CLI / agent state ###
+.railway/
+.mcp.json
