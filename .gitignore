@@ -38,3 +38,7 @@ build/
 *.local.properties
 application-local.properties
 application-*-local.properties
+
+### Railway CLI / agent state ###
+.railway/
+.mcp.json
