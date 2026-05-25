@@ -11,6 +11,7 @@ Faza A landed czysto w commit `1382676 "Add Railway deploy gates (Phase A): actu
 - Migracje: **Flyway** (konwencja Spring Boot, plain SQL, brak ceremonii — Liquibase odrzucony)
 - Zakres DB: **wiring + V1 smoke-test** (tabela `deploy_smoke_test` z jednym INSERT — bez encji domeny)
 - MCP: **lokalny stdio** (`railway mcp install --agent claude-code` w trybie domyślnym, bez OAuth)
+- **Backupy Postgresa**: odłożone na po Fazie C, jeśli włączenie wiązałoby się ze wzrostem kosztów. W Fazie B nie ma danych domeny do utracenia; użytkownik świadomie przejmuje pamięć i włączy backupy ręcznie razem z pierwszą encją domeny.
 
 **Co Faza B udowadnia end-to-end**:
 1. PostgreSQL prowizjonowany przez Railway łączy się z aplikacją w runtime.
@@ -25,8 +26,8 @@ Faza A landed czysto w commit `1382676 "Add Railway deploy gates (Phase A): actu
 
 Z risk registera `infrastructure.md` i z natury Fazy B — następujące akcje **muszą zostać wykonane ręcznie przez właściciela konta**:
 
-1. **`railway add --database postgres`** — sama komenda CLI'owa po wyborze nazwy serwisu. Agent może to wykonać, ALE proces wymaga interakcji w dashboardzie zaraz potem (gate 2). Bezpieczniej: właściciel konta uruchamia to po przejrzeniu planu.
-2. **Dashboard Railway → Postgres service → Settings → Backups → Enable daily backups** — **CRITICAL day-one gate**. Brak CLI flag na tę akcję (stan na 2026-05-24, `infrastructure.md:104`). Likelihood "High until done", Impact "Catastrophic" (PRD guardrail "No silent data loss"). **Bez tego Faza B nie jest zaliczona.**
+1. **`railway add --database postgres`** — sama komenda CLI'owa po wyborze nazwy serwisu. Agent może to wykonać, ALE bezpieczniej: właściciel konta uruchamia to po przejrzeniu planu.
+2. **Backupy Postgresa — ODŁOŻONE na po Fazie C**. Decyzja użytkownika (2026-05-25): nie włączamy daily backups w Fazie B, jeśli wiązałoby się to z jakimkolwiek wzrostem kosztów. Akceptowane ryzyko: utrata danych smoke-test'u (`deploy_smoke_test`) jest trywialna — żadnych danych domeny jeszcze nie ma. Użytkownik świadomie przejmuje pamięć o tym kroku i włączy backupy ręcznie po Fazie C, kiedy pojawią się pierwsze encje domeny i utrata danych przestanie być akceptowalna.
 3. **Dashboard Railway → świadome NIE-akcje** (potwierdzenie, że pozostają wyłączone z Fazy A):
    - **NIE włączać** App Sleeping (1s NFR z PRD).
    - **NIE włączać** PR Preview Environments (po dodaniu Postgresa to ryzyko klobują preview-em production DB — `infrastructure.md:92,108`).
@@ -188,9 +189,6 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Confirm Postgres backups gate
-        run: echo "::warning::Manual gate — confirm Postgres backups toggle is ENABLED in Railway dashboard before this deploy promotes to main."
-
       - name: Deploy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -203,7 +201,6 @@ jobs:
 - `--ci`: wyłącza interactive prompty i ANSI codes (Railway CLI docs).
 - `--detach`: workflow nie taił logów deploya. Railway dashboard pokaże status. **Alternatywa do rozważenia**: bez `--detach` workflow czeka na healthcheck (`healthcheckTimeout=300s`) i daje czerwony CI jeśli deploy fails. Wybór: `--detach` dla MVP (szybszy feedback w GitHub UI); zdjęcie w Fazie C kiedy chcemy hard-gate'a.
 - `cancel-in-progress: false`: odwrotnie do typowej rady. Cancelowanie `railway up` mid-image-push zostawia half-uploaded deploy.
-- "Confirm Postgres backups gate" step: advisory `::warning::` — Railway nie ma API by sprawdzić toggle programowo (na 2026-05). Prawdziwy enforcement to Human gate #2.
 - Token: **project-scoped `RAILWAY_TOKEN`** wiąże CLI z konkretnym projektem bez `RAILWAY_PROJECT_ID` (token IS the binding, per Railway docs). **NIE używamy** `RAILWAY_API_TOKEN` (account-scoped, ryzyko cross-project).
 
 ### 6. `.gitignore` — dopisać dwie sekcje
@@ -310,7 +307,7 @@ Z risk registera #1: każda Vn musi przejść lokalnie przed commitem. Phase B V
    ```
    Wybrać tę samą region co `garageops` service (Amsterdam). Po sukcesie w dashboardzie widać dwa serwisy: `garageops` i `Postgres`.
 
-3. **Human gate 2 — CRITICAL, no skipping**: właściciel konta otwiera dashboard → Postgres → Settings → Backups → **Enable daily backups**. Verification: dashboard pokazuje "Backups: Daily" i pierwszą zaplanowaną datę.
+3. **Backupy Postgresa — pominięte w Fazie B** (decyzja użytkownika 2026-05-25, sekcja "Human gates" pkt 2). Włączenie odłożone na po Fazie C, kiedy pojawi się pierwsza encja domeny.
 
 4. **Bind `PG*` env vars do `garageops` serwisu przez service-link** (agent):
    ```powershell
@@ -437,7 +434,7 @@ git commit -m "Archive Phase B deploy plan"
 
 ## Verification (definicja zielonej Fazy B)
 
-Wszystkie dziesięć musi przejść:
+Wszystkie dziewięć musi przejść:
 
 1. **Lokalny start z Docker Postgres** loguje 8-linijkową sygnaturę z sekcji B krok 2.
 2. **`mvnw verify`** zielony lokalnie i w GitHub Actions (test profile wyklucza DataSource autoconfig).
@@ -448,7 +445,8 @@ Wszystkie dziesięć musi przejść:
 7. **Memory under 450MB** w dashboardzie Railway na idle (regression check vs Faza A < 400MB; Hikari + JDBC + Flyway dorzucają ~40-50MB).
 8. **Latency NFR**: 5 ciepłych `Invoke-RestMethod` na `/actuator/health` — średnia < 1000ms (regression check vs Faza A).
 9. **Railway agent tooling**: `/mcp` w Claude Code pokazuje serwer `railway`, smoke test query odpowiada z MCP toola.
-10. **Backups confirmed**: dashboard → Postgres → Settings → Backups status = "Enabled" + last successful snapshot timestamp widoczny.
+
+**Świadomie pominięte z verification** (decyzja użytkownika 2026-05-25): potwierdzenie włączonych backupów Postgresa. Odłożone na po Fazie C wraz z pierwszą encją domeny.
 
 ---
 
@@ -477,11 +475,11 @@ Trzy ścieżki, kolejność od najlżejszej:
    ```
    Albo zaakceptować "schema wyprzedza kod" i przyspieszyć fix-forward.
 
-3. **Pełna deinstalacja Postgresa** (jeśli DB się skorumpuje i restore from backup nie wystarczy):
+3. **Pełna deinstalacja Postgresa** (jeśli DB się skorumpuje):
    - Dashboard Railway → Postgres service → Settings → Delete Service. **Human-only action** (nie agent).
    - Następnie odpiąć service-link env vars z `garageops` (automatycznie zresetowane po DELETE Postgres service).
-   - Re-provision: `railway add --database postgres` od nowa, restore z backupu w dashboardzie (jeśli enable'owałeś backups).
-   - Czas: ~10 min + restore time. **Jeśli backups były DISABLED** — kompletna utrata danych. To dlaczego Human gate 2 jest CRITICAL.
+   - Re-provision: `railway add --database postgres` od nowa. Flyway odtworzy schemę z migracji w repo.
+   - Czas: ~10 min. **W Fazie B backupy są DISABLED świadomie** (decyzja użytkownika 2026-05-25) — utrata `deploy_smoke_test` jest akceptowalna, bo żadnych danych domeny jeszcze nie ma. Po Fazie C użytkownik włącza backupy ręcznie i ten kalkulator ryzyka się zmienia.
 
 **Co NIE wraca automatycznie**: schema migrations (codified z Fazy A risk register). W Fazie B V1 jest trywialne, więc ręczny rollback to jedna komenda. W Fazie C+ — Flyway/Liquibase backward-compatible discipline jest twarda zasada.
 
@@ -495,6 +493,7 @@ Wprost odraczamy do następnych planów / lessons, żeby nie rozszerzać Fazy B:
 - **JPA / Spring Data**: `spring-boot-starter-data-jpa` dependency, `@Entity` / `@Repository` / `JpaRepository<>` interfaces. Faza C.
 - **Spring Security**: FR-001/FR-002 email+password auth — Faza D (auth implementacja, nie infrastruktura).
 - **PR Preview Environments**: po dodaniu Postgresa to twarde NIE bez separate per-env DB. Odłożone do Fazy E lub porzucone.
+- **Postgres daily backups**: świadomie odłożone z Fazy B na "po Fazie C" (decyzja użytkownika 2026-05-25). Powód: w Fazie B nie ma danych domeny do utracenia. Włączenie wraca do TODO razem z pierwszą encją z PRD.
 - **Testcontainers w CI**: pierwsza encja w Fazie C dostanie integration test slice z Testcontainers — wtedy zmieni się test profile z autoconfig-exclude na real-Postgres.
 - **MCP Railway remote/OAuth tryb**: lokalny stdio wystarczy do Fazy B-C. Remote ma sens kiedy chcesz dzielić agent-state z innym deweloperem.
 - **`railway whoami` jako CI guard**: opcjonalne ulepszenie workflow w Fazie C, +2s na auth-loud-fail jeśli token wygasł.
