@@ -302,16 +302,16 @@ data migration; the Flyway smoke migration and JDBC starter are untouched (F-02 
 
 #### Automated
 
-- [ ] 1.1 Project compiles: `mvnw.cmd -q compile`
-- [ ] 1.2 Application context boots with security: `mvnw.cmd -q test -Dtest=GarageopsApplicationTests`
-- [ ] 1.3 Full build passes: `mvnw.cmd verify`
+- [x] 1.1 Project compiles: `mvnw.cmd -q compile`
+- [x] 1.2 Application context boots with security: `mvnw.cmd -q test -Dtest=GarageopsApplicationTests`
+- [x] 1.3 Full build passes: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 1.4 Unauthenticated gated path redirects to `/login`
-- [ ] 1.5 Login with configured owner credentials succeeds
-- [ ] 1.6 `/actuator/health` returns 200 unauthenticated
-- [ ] 1.7 Wrong credentials rejected (`/login?error`)
+- [x] 1.4 Unauthenticated gated path redirects to `/login`
+- [x] 1.5 Login with configured owner credentials succeeds
+- [x] 1.6 `/actuator/health` returns 200 unauthenticated
+- [x] 1.7 Wrong credentials rejected (`/login?error`)
 
 ### Phase 2: Lock the gating contract with tests
 
