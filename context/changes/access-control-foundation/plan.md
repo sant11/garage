@@ -302,25 +302,25 @@ data migration; the Flyway smoke migration and JDBC starter are untouched (F-02 
 
 #### Automated
 
-- [x] 1.1 Project compiles: `mvnw.cmd -q compile`
-- [x] 1.2 Application context boots with security: `mvnw.cmd -q test -Dtest=GarageopsApplicationTests`
-- [x] 1.3 Full build passes: `mvnw.cmd verify`
+- [x] 1.1 Project compiles: `mvnw.cmd -q compile` — 6dec72c
+- [x] 1.2 Application context boots with security: `mvnw.cmd -q test -Dtest=GarageopsApplicationTests` — 6dec72c
+- [x] 1.3 Full build passes: `mvnw.cmd verify` — 6dec72c
 
 #### Manual
 
-- [x] 1.4 Unauthenticated gated path redirects to `/login`
-- [x] 1.5 Login with configured owner credentials succeeds
-- [x] 1.6 `/actuator/health` returns 200 unauthenticated
-- [x] 1.7 Wrong credentials rejected (`/login?error`)
+- [x] 1.4 Unauthenticated gated path redirects to `/login` — 6dec72c
+- [x] 1.5 Login with configured owner credentials succeeds — 6dec72c
+- [x] 1.6 `/actuator/health` returns 200 unauthenticated — 6dec72c
+- [x] 1.7 Wrong credentials rejected (`/login?error`) — 6dec72c
 
 ### Phase 2: Lock the gating contract with tests
 
 #### Automated
 
-- [ ] 2.1 New gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [ ] 2.2 Existing smoke test still passes: `mvnw.cmd test -Dtest=GarageopsApplicationTests`
-- [ ] 2.3 Full build + suite passes: `mvnw.cmd verify`
+- [x] 2.1 New gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
+- [x] 2.2 Existing smoke test still passes: `mvnw.cmd test -Dtest=GarageopsApplicationTests`
+- [x] 2.3 Full build + suite passes: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 2.4 Reviewer confirms test asserts redirect, public health, and valid login against real `SecurityConfig`
+- [x] 2.4 Reviewer confirms test asserts redirect, public health, and valid login against real `SecurityConfig`
