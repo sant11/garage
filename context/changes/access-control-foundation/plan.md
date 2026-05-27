@@ -317,10 +317,10 @@ data migration; the Flyway smoke migration and JDBC starter are untouched (F-02 
 
 #### Automated
 
-- [x] 2.1 New gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [x] 2.2 Existing smoke test still passes: `mvnw.cmd test -Dtest=GarageopsApplicationTests`
-- [x] 2.3 Full build + suite passes: `mvnw.cmd verify`
+- [x] 2.1 New gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests` — 15182e1
+- [x] 2.2 Existing smoke test still passes: `mvnw.cmd test -Dtest=GarageopsApplicationTests` — 15182e1
+- [x] 2.3 Full build + suite passes: `mvnw.cmd verify` — 15182e1
 
 #### Manual
 
-- [x] 2.4 Reviewer confirms test asserts redirect, public health, and valid login against real `SecurityConfig`
+- [x] 2.4 Reviewer confirms test asserts redirect, public health, and valid login against real `SecurityConfig` — 15182e1
