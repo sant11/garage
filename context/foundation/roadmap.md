@@ -29,7 +29,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 
 | ID    | Change ID                  | Outcome (user can …)                                              | Prerequisites | PRD refs                          | Status   |
 | ----- | -------------------------- | ----------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
-| F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | ready    |
+| F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | done     |
 | F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | done     |
 | S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | proposed |
 | S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | proposed |
@@ -74,7 +74,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Spring Security ceremony is flagged in `tech-stack.md` as known friction; sequenced first so the gating contract is proven before any data-bearing route is exposed. This is the privacy guardrail's load-bearing enabler.
-- **Status:** ready
+- **Status:** done
 
 ### F-02: JPA persistence & archive-only foundation
 
@@ -217,3 +217,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 (Empty on first generation. `/10x-archive` appends entries here — and flips the matching item's `Status` to `done` — when a change whose `Change ID` matches a roadmap item is archived. Do NOT pre-populate.)
 
 - **F-02: (foundation) JPA persistence + archive-only convention established** — Archived 2026-05-28 → `context/archive/2026-05-27-jpa-persistence-foundation/`. Lesson: —.
+- **F-01: (foundation) Spring Security wired; all routes gated to login** — Archived 2026-05-28 → `context/archive/2026-05-26-access-control-foundation/`. Lesson: —.
