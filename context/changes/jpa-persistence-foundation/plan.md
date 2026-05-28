@@ -373,25 +373,25 @@ entity/repository and, eventually, the `deploy_smoke_test` table can be retired.
 
 #### Automated
 
-- [x] 1.1 Project compiles: `mvnw.cmd -q compile`
-- [x] 1.2 Context test passes DB-free with JPA: `mvnw.cmd test -Dtest=GarageopsApplicationTests`
-- [x] 1.3 F-01 gating test still passes DB-free: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [x] 1.4 Full build passes: `mvnw.cmd verify`
+- [x] 1.1 Project compiles: `mvnw.cmd -q compile` — 149abbb
+- [x] 1.2 Context test passes DB-free with JPA: `mvnw.cmd test -Dtest=GarageopsApplicationTests` — 149abbb
+- [x] 1.3 F-01 gating test still passes DB-free: `mvnw.cmd test -Dtest=SecurityGatingTests` — 149abbb
+- [x] 1.4 Full build passes: `mvnw.cmd verify` — 149abbb
 
 #### Manual
 
-- [x] 1.5 `spring-boot:run` boots clean against real Postgres under `ddl-auto=validate` (no schema-validation error)
-- [x] 1.6 Log shows Hibernate validating (not creating/altering) and Flyway resting at V1
-- [x] 1.7 No open-session-in-view warning in the log
+- [x] 1.5 `spring-boot:run` boots clean against real Postgres under `ddl-auto=validate` (no schema-validation error) — 149abbb
+- [x] 1.6 Log shows Hibernate validating (not creating/altering) and Flyway resting at V1 — 149abbb
+- [x] 1.7 No open-session-in-view warning in the log — 149abbb
 
 ### Phase 2: Lock the archive-only convention with a test
 
 #### Automated
 
-- [ ] 2.1 New convention test passes: `mvnw.cmd test -Dtest=ArchivableEntityTests`
-- [ ] 2.2 Existing tests still pass: `GarageopsApplicationTests` + `SecurityGatingTests`
-- [ ] 2.3 Full build + suite passes: `mvnw.cmd verify`
+- [x] 2.1 New convention test passes: `mvnw.cmd test -Dtest=ArchivableEntityTests`
+- [x] 2.2 Existing tests still pass: `GarageopsApplicationTests` + `SecurityGatingTests`
+- [x] 2.3 Full build + suite passes: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 2.4 Reviewer confirms the test exercises real `ArchivableEntity` behavior (archive transition + lifecycle timestamps), DB-free
+- [x] 2.4 Reviewer confirms the test exercises real `ArchivableEntity` behavior (archive transition + lifecycle timestamps), DB-free
