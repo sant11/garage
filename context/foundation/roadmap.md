@@ -3,7 +3,7 @@ project: GarageOps
 version: 1
 status: draft
 created: 2026-05-26
-updated: 2026-05-26
+updated: 2026-05-28
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -30,7 +30,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | ID    | Change ID                  | Outcome (user can …)                                              | Prerequisites | PRD refs                          | Status   |
 | ----- | -------------------------- | ----------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
 | F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | ready    |
-| F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | ready    |
+| F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | done     |
 | S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | proposed |
 | S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | proposed |
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | proposed |
@@ -87,7 +87,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** the JDBC scaffold (and its `V1__init.sql` smoke table) must be swapped to JPA per the stack correction; doing it once as a foundation avoids each slice reinventing persistence. Keep it thin — the entities themselves land in their slices, not here. Over-broadening this into "build the whole schema" is the anti-pattern to avoid.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -215,3 +215,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Done
 
 (Empty on first generation. `/10x-archive` appends entries here — and flips the matching item's `Status` to `done` — when a change whose `Change ID` matches a roadmap item is archived. Do NOT pre-populate.)
+
+- **F-02: (foundation) JPA persistence + archive-only convention established** — Archived 2026-05-28 → `context/archive/2026-05-27-jpa-persistence-foundation/`. Lesson: —.
