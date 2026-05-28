@@ -388,10 +388,10 @@ entity/repository and, eventually, the `deploy_smoke_test` table can be retired.
 
 #### Automated
 
-- [x] 2.1 New convention test passes: `mvnw.cmd test -Dtest=ArchivableEntityTests`
-- [x] 2.2 Existing tests still pass: `GarageopsApplicationTests` + `SecurityGatingTests`
-- [x] 2.3 Full build + suite passes: `mvnw.cmd verify`
+- [x] 2.1 New convention test passes: `mvnw.cmd test -Dtest=ArchivableEntityTests` — f852dd1
+- [x] 2.2 Existing tests still pass: `GarageopsApplicationTests` + `SecurityGatingTests` — f852dd1
+- [x] 2.3 Full build + suite passes: `mvnw.cmd verify` — f852dd1
 
 #### Manual
 
-- [x] 2.4 Reviewer confirms the test exercises real `ArchivableEntity` behavior (archive transition + lifecycle timestamps), DB-free
+- [x] 2.4 Reviewer confirms the test exercises real `ArchivableEntity` behavior (archive transition + lifecycle timestamps), DB-free — f852dd1

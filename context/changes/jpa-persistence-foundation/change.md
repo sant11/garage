@@ -1,9 +1,9 @@
 ---
 change_id: jpa-persistence-foundation
 title: JPA persistence + archive-only foundation
-status: implementing
+status: implemented
 created: 2026-05-27
-updated: 2026-05-27
+updated: 2026-05-28
 triaged: 2026-05-27
 archived_at: null
 ---
