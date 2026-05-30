@@ -1,7 +1,7 @@
 ---
 change_id: owner-auth-signup-login
 title: Owner auth signup login
-status: impl_reviewed
+status: implemented
 created: 2026-05-28
 updated: 2026-05-30
 archived_at: null

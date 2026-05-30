@@ -429,12 +429,12 @@ Negligible at this scale (single owner, low QPS). BCrypt verification cost is pe
 
 #### Automated
 
-- [x] 4.1 New unit tests pass: `mvnw.cmd test -Dtest=OwnerAccountTests,OwnerBootstrapTests`
-- [x] 4.2 Gating test green (DB-free) against DB-backed config: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [x] 4.3 Full build + suite: `mvnw.cmd verify`
+- [x] 4.1 New unit tests pass: `mvnw.cmd test -Dtest=OwnerAccountTests,OwnerBootstrapTests` — 5bfbdd5
+- [x] 4.2 Gating test green (DB-free) against DB-backed config: `mvnw.cmd test -Dtest=SecurityGatingTests` — 5bfbdd5
+- [x] 4.3 Full build + suite: `mvnw.cmd verify` — 5bfbdd5
 
 #### Manual
 
-- [x] 4.4 Railway deploy (built with `-Pproduction`) comes up healthy
-- [x] 4.5 Deployed app serves the Vaadin login; login works from two devices (FR-002) and logout works on each
-- [x] 4.6 No data routes reachable unauthenticated (privacy NFR spot-check)
+- [x] 4.4 Railway deploy (built with `-Pproduction`) comes up healthy — 5bfbdd5
+- [x] 4.5 Deployed app serves the Vaadin login; login works from two devices (FR-002) and logout works on each — 5bfbdd5
+- [x] 4.6 No data routes reachable unauthenticated (privacy NFR spot-check) — 5bfbdd5
