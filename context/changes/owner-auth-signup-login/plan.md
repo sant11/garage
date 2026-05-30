@@ -414,27 +414,27 @@ Negligible at this scale (single owner, low QPS). BCrypt verification cost is pe
 
 #### Automated
 
-- [x] 3.1 Compiles: `mvnw.cmd -q compile`
-- [x] 3.2 Existing tests still green: `mvnw.cmd test`
-- [x] 3.3 Full build: `mvnw.cmd verify`
+- [x] 3.1 Compiles: `mvnw.cmd -q compile` — 58548f8
+- [x] 3.2 Existing tests still green: `mvnw.cmd test` — 58548f8
+- [x] 3.3 Full build: `mvnw.cmd verify` — 58548f8
 
 #### Manual
 
-- [x] 3.4 Flyway applies `V2__users.sql` and the app boots (no `ddl-auto=validate` mismatch)
-- [x] 3.5 First boot seeds the owner from `OWNER_*`; restart does not duplicate it
-- [x] 3.6 Login with the seeded owner succeeds end-to-end (Vaadin login → home)
-- [x] 3.7 Wrong credentials rejected
-
+- [x] 3.4 Flyway applies `V2__users.sql` and the app boots (no `ddl-auto=validate` mismatch) — 58548f8
+- [x] 3.5 First boot seeds the owner from `OWNER_*`; restart does not duplicate it — 58548f8
+- [x] 3.6 Login with the seeded owner succeeds end-to-end (Vaadin login → home) — 58548f8
+- [x] 3.7 Wrong credentials rejected — 58548f8
+ - 
 ### Phase 4: Lock with tests + verify cross-device deploy
 
 #### Automated
 
-- [ ] 4.1 New unit tests pass: `mvnw.cmd test -Dtest=OwnerAccountTests,OwnerBootstrapTests`
-- [ ] 4.2 Gating test green (DB-free) against DB-backed config: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [ ] 4.3 Full build + suite: `mvnw.cmd verify`
+- [x] 4.1 New unit tests pass: `mvnw.cmd test -Dtest=OwnerAccountTests,OwnerBootstrapTests`
+- [x] 4.2 Gating test green (DB-free) against DB-backed config: `mvnw.cmd test -Dtest=SecurityGatingTests`
+- [x] 4.3 Full build + suite: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 4.4 Railway deploy (built with `-Pproduction`) comes up healthy
-- [ ] 4.5 Deployed app serves the Vaadin login; login works from two devices (FR-002) and logout works on each
-- [ ] 4.6 No data routes reachable unauthenticated (privacy NFR spot-check)
+- [x] 4.4 Railway deploy (built with `-Pproduction`) comes up healthy
+- [x] 4.5 Deployed app serves the Vaadin login; login works from two devices (FR-002) and logout works on each
+- [x] 4.6 No data routes reachable unauthenticated (privacy NFR spot-check)
