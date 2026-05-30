@@ -1,9 +1,10 @@
 package com.example.garageops.security;
 
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -14,12 +15,17 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Access-control foundation (F-01): gates every route to the authenticated owner.
+ * Access-control foundation, now fronted by Vaadin Flow (S-01).
  *
- * <p>Public carve-out is deliberately tight — only {@code /actuator/health} (the deploy
- * healthcheck), the generated {@code /login} endpoints, and static assets are open; every
- * other request requires authentication. The owner is a config-driven in-memory placeholder;
- * S-01 swaps the {@link UserDetailsService} for a DB-backed store without touching the chain.
+ * <p>The chain is built through {@link VaadinSecurityConfigurer}, which wires the Vaadin
+ * {@code LoginView}, enables CSRF (ignoring Vaadin internal requests), configures logout and
+ * request caching, and denies every request that isn't a framework request, an
+ * {@code @AnonymousAllowed} view, or an explicitly permitted matcher. The only HTTP-level
+ * carve-out is {@code /actuator/health} (the deploy healthcheck) — deliberately not broadened
+ * to {@code /actuator/**} (privacy NFR). View access is otherwise annotation-driven.
+ *
+ * <p>The owner is still a config-driven in-memory placeholder here; S-01 Phase 3 swaps the
+ * {@link UserDetailsService} for a DB-backed store without touching this chain.
  */
 @Configuration
 @EnableWebSecurity
@@ -27,13 +33,9 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/actuator/health", "/login", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
-				.anyRequest().authenticated())
-			.formLogin(Customizer.withDefaults())
-			// CSRF disabled by decision; S-01 must re-enable before shipping real forms.
-			.csrf(csrf -> csrf.disable());
+		http.authorizeHttpRequests(auth -> auth
+			.requestMatchers("/actuator/health").permitAll());
+		http.with(VaadinSecurityConfigurer.vaadin(), cfg -> cfg.loginView(LoginView.class));
 		return http.build();
 	}
 

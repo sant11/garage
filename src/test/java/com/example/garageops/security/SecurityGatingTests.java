@@ -13,11 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Locks the access-control foundation (F-01) gating contract against the real
- * {@link SecurityConfig}. These three facts are load-bearing for every downstream slice:
- * unauthenticated access is redirected to login, {@code /actuator/health} stays public for
- * the deploy healthcheck, and a valid owner login authenticates. The test runs under the
- * existing test-profile DataSource/Flyway exclusions, so no database is required.
+ * Locks the access-control gating contract against the real {@link SecurityConfig}, now built
+ * on {@code VaadinSecurityConfigurer}. These three facts are load-bearing for every downstream
+ * slice: unauthenticated access is redirected to the Vaadin login view, {@code /actuator/health}
+ * stays public for the deploy healthcheck, and a valid owner login authenticates. The test runs
+ * under the existing test-profile DataSource/Flyway exclusions, so no database is required.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
