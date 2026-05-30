@@ -414,16 +414,16 @@ Negligible at this scale (single owner, low QPS). BCrypt verification cost is pe
 
 #### Automated
 
-- [ ] 3.1 Compiles: `mvnw.cmd -q compile`
-- [ ] 3.2 Existing tests still green: `mvnw.cmd test`
-- [ ] 3.3 Full build: `mvnw.cmd verify`
+- [x] 3.1 Compiles: `mvnw.cmd -q compile`
+- [x] 3.2 Existing tests still green: `mvnw.cmd test`
+- [x] 3.3 Full build: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 3.4 Flyway applies `V2__users.sql` and the app boots (no `ddl-auto=validate` mismatch)
-- [ ] 3.5 First boot seeds the owner from `OWNER_*`; restart does not duplicate it
-- [ ] 3.6 Login with the seeded owner succeeds end-to-end (Vaadin login → home)
-- [ ] 3.7 Wrong credentials rejected
+- [x] 3.4 Flyway applies `V2__users.sql` and the app boots (no `ddl-auto=validate` mismatch)
+- [x] 3.5 First boot seeds the owner from `OWNER_*`; restart does not duplicate it
+- [x] 3.6 Login with the seeded owner succeeds end-to-end (Vaadin login → home)
+- [x] 3.7 Wrong credentials rejected
 
 ### Phase 4: Lock with tests + verify cross-device deploy
 

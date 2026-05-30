@@ -2,16 +2,12 @@ package com.example.garageops.security;
 
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -24,8 +20,10 @@ import org.springframework.security.web.SecurityFilterChain;
  * carve-out is {@code /actuator/health} (the deploy healthcheck) — deliberately not broadened
  * to {@code /actuator/**} (privacy NFR). View access is otherwise annotation-driven.
  *
- * <p>The owner is still a config-driven in-memory placeholder here; S-01 Phase 3 swaps the
- * {@link UserDetailsService} for a DB-backed store without touching this chain.
+ * <p>Authentication is DB-backed: the {@code UserDetailsService} is the repository-backed
+ * {@code OwnerDetailsService} in the {@code account} package (S-01 Phase 3 retired the in-memory
+ * placeholder). This config keeps only the filter chain and the BCrypt {@link PasswordEncoder};
+ * Spring's default {@code DaoAuthenticationProvider} wires the two together.
  */
 @Configuration
 @EnableWebSecurity
@@ -42,21 +40,5 @@ public class SecurityConfig {
 	@Bean
 	PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
-	}
-
-	/**
-	 * One in-memory owner built from configuration. The stored password is already a BCrypt
-	 * hash; the {@link PasswordEncoder} bean above verifies it at login. Defining this bean
-	 * makes Boot's default random-password user back off.
-	 */
-	@Bean
-	UserDetailsService users(
-			@Value("${garageops.owner.username:owner}") String username,
-			@Value("${garageops.owner.password-hash:$2a$10$QMGr6Q3SaPmUEkg6/ukov.oRuLjMXe502Lj5WHIgrWAi/dGcBh26a}") String passwordHash) {
-		var owner = User.withUsername(username)
-			.password(passwordHash)
-			.roles("OWNER")
-			.build();
-		return new InMemoryUserDetailsManager(owner);
 	}
 }
