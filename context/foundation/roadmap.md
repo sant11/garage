@@ -3,7 +3,7 @@ project: GarageOps
 version: 1
 status: draft
 created: 2026-05-26
-updated: 2026-05-28
+updated: 2026-05-30
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -31,7 +31,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | ----- | -------------------------- | ----------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
 | F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | done     |
 | F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | done     |
-| S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | proposed |
+| S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | done     |
 | S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | proposed |
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | proposed |
 | S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | proposed |
@@ -101,7 +101,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** first user-visible slice and the entry to every gated flow; thin (single owner, one-time signup) but proves the F-01 gating contract end-to-end before any data slice depends on it.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Manage locations & garages
 
@@ -218,3 +218,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 - **F-02: (foundation) JPA persistence + archive-only convention established** — Archived 2026-05-28 → `context/archive/2026-05-27-jpa-persistence-foundation/`. Lesson: —.
 - **F-01: (foundation) Spring Security wired; all routes gated to login** — Archived 2026-05-28 → `context/archive/2026-05-26-access-control-foundation/`. Lesson: —.
+- **S-01: Owner can sign up with email + password, log in from any device with the same credentials, and log out.** — Archived 2026-05-30 → `context/archive/2026-05-28-owner-auth-signup-login/`. Lesson: —.
