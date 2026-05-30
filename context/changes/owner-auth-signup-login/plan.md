@@ -398,17 +398,17 @@ Negligible at this scale (single owner, low QPS). BCrypt verification cost is pe
 
 #### Automated
 
-- [x] 2.1 Compiles: `mvnw.cmd -q compile`
-- [x] 2.2 Gating test passes against the Vaadin chain: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [x] 2.3 Full suite green: `mvnw.cmd verify`
+- [x] 2.1 Compiles: `mvnw.cmd -q compile` — c674b77
+- [x] 2.2 Gating test passes against the Vaadin chain: `mvnw.cmd test -Dtest=SecurityGatingTests` — c674b77
+- [x] 2.3 Full suite green: `mvnw.cmd verify` — c674b77
 
 #### Manual
 
-- [x] 2.4 Unauthenticated `/` redirects to the Vaadin `LoginView` (not Spring's generated page)
-- [x] 2.5 Login with owner credentials lands on `HomeView` inside `MainLayout`
-- [x] 2.6 Logout returns to login and invalidates the session
-- [x] 2.7 `/actuator/health` returns 200 unauthenticated
-- [x] 2.8 Wrong password shows the `LoginForm` error state
+- [x] 2.4 Unauthenticated `/` redirects to the Vaadin `LoginView` (not Spring's generated page) — c674b77
+- [x] 2.5 Login with owner credentials lands on `HomeView` inside `MainLayout` — c674b77
+- [x] 2.6 Logout returns to login and invalidates the session — c674b77
+- [x] 2.7 `/actuator/health` returns 200 unauthenticated — c674b77
+- [x] 2.8 Wrong password shows the `LoginForm` error state — c674b77
 
 ### Phase 3: DB-backed owner store + idempotent bootstrap
 

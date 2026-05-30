@@ -54,7 +54,7 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 What's already in place in the codebase as of 2026-05-26 (auto-researched + user-confirmed).
 Foundations below assume these are present and do NOT re-scaffold them.
 
-- **Frontend:** absent — no UI layer; no Thymeleaf/templates, no SPA. The view-layer choice was explicitly deferred at stack selection (`tech-stack.md`).
+- **Frontend:** not yet wired in code, but the view-layer choice is now **resolved to Vaadin Flow 25** (server-side Java UI, main framework alongside Spring — no Thymeleaf, no separate SPA; see `tech-stack.md`). Each user-visible slice (S-01–S-07) builds its screens as Vaadin `@Route` views over the Spring services.
 - **Backend / API:** partial — Spring Boot 4.0.6 app boots (`GarageopsApplication.java`); webmvc + actuator wired. Zero controllers/services/domain; only `/actuator/health`.
 - **Data:** partial — Postgres + Flyway wired and tuned (`application.properties`, HikariCP), but the scaffold uses `spring-boot-starter-jdbc`. **Per user correction, the persistence layer will be JPA, not JDBC** (F-02 owns the swap). Only migration is `V1__init.sql` = a `deploy_smoke_test` table; no domain schema.
 - **Auth:** absent — no Spring Security dependency or config. FR-001/FR-002 not started.
