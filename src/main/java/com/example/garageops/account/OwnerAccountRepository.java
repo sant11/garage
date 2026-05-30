@@ -11,6 +11,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface OwnerAccountRepository extends JpaRepository<OwnerAccount, Long> {
 
 	Optional<OwnerAccount> findByUsername(String username);
-
-	boolean existsByUsername(String username);
 }

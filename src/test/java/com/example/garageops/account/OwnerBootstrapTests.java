@@ -1,6 +1,7 @@
 package com.example.garageops.account;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * Verifies the {@link OwnerBootstrap} idempotency contract with a mocked repository — no Spring
@@ -33,7 +35,8 @@ class OwnerBootstrapTests {
 
 	private OwnerBootstrap newBootstrap() {
 		given(provider.getIfAvailable()).willReturn(repository);
-		return new OwnerBootstrap(provider, USERNAME, EMAIL, PASSWORD_HASH);
+		// No active profile — mirrors local dev, where the fallback hash is permitted.
+		return new OwnerBootstrap(provider, new StandardEnvironment(), USERNAME, EMAIL, PASSWORD_HASH);
 	}
 
 	@Test
@@ -57,6 +60,19 @@ class OwnerBootstrapTests {
 
 		newBootstrap().run(null);
 
+		verify(repository, never()).save(any());
+	}
+
+	@Test
+	void abortsWhenSeedingWithDevFallbackHashUnderProductionProfile() {
+		given(provider.getIfAvailable()).willReturn(repository);
+		given(repository.count()).willReturn(0L);
+		StandardEnvironment production = new StandardEnvironment();
+		production.setActiveProfiles("production");
+		OwnerBootstrap bootstrap = new OwnerBootstrap(
+				provider, production, USERNAME, EMAIL, OwnerBootstrap.DEFAULT_DEV_PASSWORD_HASH);
+
+		assertThatThrownBy(() -> bootstrap.run(null)).isInstanceOf(IllegalStateException.class);
 		verify(repository, never()).save(any());
 	}
 }

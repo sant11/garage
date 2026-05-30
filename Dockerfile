@@ -10,6 +10,8 @@ RUN ./mvnw -B -ntp -DskipTests -Pproduction package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+# Activate the production profile so OwnerBootstrap refuses to seed with the dev fallback hash.
+ENV SPRING_PROFILES_ACTIVE=production
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["sh","-c","exec java $JAVA_OPTS -jar app.jar"]
