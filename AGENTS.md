@@ -35,6 +35,7 @@ Use the Maven wrapper (`mvnw.cmd` on Windows, `./mvnw` elsewhere). `java.version
 - "Use constructor injection only. No @Autowired on fields or setters." (checkable: grep for field-@Autowired.)
 - "Annotate web entry points with @RestController, services with @Service, config with @Configuration — never plain @Component for these roles." (checkable: grep for @Component on classes in controller/service/config packages.)
 - "Package by feature under com.example.garageops.<feature> (e.g. garageops.contracts, garageops.payments), not by layer (controllers/, services/)." (checkable: any top-level controllers/services package fails review.) — (assumed), confirm against your plan.
+- "Always declare @ManyToOne(fetch = FetchType.LAZY) explicitly on JPA associations. Never rely on the EAGER default. Before merging LAZY associations, ensure every repository query that fetches the owning entity includes an explicit fetch-join (JPQL JOIN FETCH, @EntityGraph, or DTO projection) for any association field that will be traversed outside the transactional session (view rendering, service-layer grouping/mapping, etc.). This is required because spring.jpa.open-in-view=false — detached entities cannot lazily load associations after the session closes." (checkable: grep for @ManyToOne without 'fetch = FetchType.LAZY' fails review; LazyInitializationException in tests or runtime indicates missing fetch-join.)
 
 ## Testing
 

@@ -2,6 +2,8 @@ package com.example.garageops.garages;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -78,6 +80,18 @@ public class GarageService {
 	/** @return active (non-archived) garages under a location, for the per-location grid. */
 	public List<Garage> listActiveByLocation(Long locationId) {
 		return garages().findByLocationIdAndArchivedAtIsNull(locationId);
+	}
+
+	/**
+	 * @return active garages for the given locations, grouped by location id, loaded in one query —
+	 *         the batch path the portfolio view uses to avoid a query-per-location render.
+	 */
+	public Map<Long, List<Garage>> listActiveByLocations(List<Long> locationIds) {
+		if (locationIds.isEmpty()) {
+			return Map.of();
+		}
+		return garages().findByLocationIdInAndArchivedAtIsNull(locationIds).stream()
+			.collect(Collectors.groupingBy(g -> g.getLocation().getId()));
 	}
 
 	private Garage require(Long id) {

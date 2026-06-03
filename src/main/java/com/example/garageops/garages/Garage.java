@@ -7,6 +7,7 @@ import com.example.garageops.persistence.ArchivableEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -29,7 +30,7 @@ import jakarta.validation.constraints.Positive;
 @Table(name = "garages")
 public class Garage extends ArchivableEntity {
 
-	@ManyToOne(optional = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "location_id", nullable = false)
 	private Location location;
 

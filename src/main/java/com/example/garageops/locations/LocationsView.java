@@ -2,6 +2,7 @@ package com.example.garageops.locations;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import com.example.garageops.garages.Garage;
 import com.example.garageops.garages.GarageService;
@@ -84,17 +85,21 @@ public class LocationsView extends VerticalLayout {
 			sections.add(new Paragraph("No locations yet. Add your first location to get started."));
 			return;
 		}
+		// Batch-load all active garages once, grouped by location id, rather than a query per section.
+		Map<Long, List<Garage>> garagesByLocation = garageService.listActiveByLocations(
+			locations.stream().map(Location::getId).toList());
 		for (Location location : locations) {
-			sections.add(locationSection(location));
+			sections.add(locationSection(location,
+				garagesByLocation.getOrDefault(location.getId(), List.of())));
 		}
 	}
 
-	private Component locationSection(Location location) {
+	private Component locationSection(Location location, List<Garage> garages) {
 		H3 name = new H3(location.getName());
 
 		Button rename = new Button("Rename", e -> openLocationDialog(location));
 		Button addGarage = new Button("Add garage", e -> openGarageDialog(location, null));
-		Button archive = new Button("Archive", e -> confirmArchiveLocation(location));
+		Button archive = new Button("Archive", e -> confirmArchiveLocation(location, garages.size()));
 		archive.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
 
 		HorizontalLayout actions = new HorizontalLayout(rename, addGarage, archive);
@@ -110,7 +115,7 @@ public class LocationsView extends VerticalLayout {
 		grid.addColumn(g -> g.getMonthlyRent().toPlainString()).setHeader("Monthly rent").setAutoWidth(true);
 		grid.addComponentColumn(this::statusBadge).setHeader("Status").setAutoWidth(true);
 		grid.addComponentColumn(this::garageActions).setHeader("Actions").setAutoWidth(true);
-		grid.setItems(garageService.listActiveByLocation(location.getId()));
+		grid.setItems(garages);
 		grid.setAllRowsVisible(true);
 
 		VerticalLayout section = new VerticalLayout(head, grid);
@@ -166,7 +171,9 @@ public class LocationsView extends VerticalLayout {
 			.withValidator(v -> !v.trim().isEmpty(), "Name is required")
 			.bind(Location::getName, Location::rename);
 
-		Location bean = adding ? new Location("") : existing;
+		// Bind a throwaway bean (a fresh copy when renaming) so keystrokes never mutate the live
+		// entity that also sits in the rendered list; the persisted value is read from this bean.
+		Location bean = adding ? new Location("") : new Location(existing.getName());
 		binder.setBean(bean);
 
 		Button save = new Button("Save", e -> {
@@ -176,7 +183,7 @@ public class LocationsView extends VerticalLayout {
 			if (adding) {
 				locationService.add(bean.getName().trim());
 			} else {
-				locationService.rename(existing.getId(), existing.getName().trim());
+				locationService.rename(existing.getId(), bean.getName().trim());
 			}
 			dialog.close();
 			refresh();
@@ -213,7 +220,11 @@ public class LocationsView extends VerticalLayout {
 			.withValidator(v -> v != null && v.signum() > 0, "Rent must be a positive amount")
 			.bind(Garage::getMonthlyRent, (g, v) -> g.edit(g.getLabel(), v));
 
-		Garage bean = adding ? new Garage(parent, "", null) : existing;
+		// Bind a throwaway bean (a fresh copy when editing) so keystrokes never mutate the live
+		// entity that also sits in the rendered list; the persisted values are read from this bean.
+		Garage bean = adding
+			? new Garage(parent, "", null)
+			: new Garage(existing.getLocation(), existing.getLabel(), existing.getMonthlyRent());
 		binder.setBean(bean);
 
 		Button save = new Button("Save", e -> {
@@ -223,7 +234,7 @@ public class LocationsView extends VerticalLayout {
 			if (adding) {
 				garageService.add(parent.getId(), bean.getLabel().trim(), bean.getMonthlyRent());
 			} else {
-				garageService.edit(existing.getId(), existing.getLabel().trim(), existing.getMonthlyRent());
+				garageService.edit(existing.getId(), bean.getLabel().trim(), bean.getMonthlyRent());
 			}
 			dialog.close();
 			refresh();
@@ -263,9 +274,7 @@ public class LocationsView extends VerticalLayout {
 	}
 
 	/** Archive a location behind a confirm that names how many active garages will also be archived. */
-	private void confirmArchiveLocation(Location location) {
-		int garageCount = garageService.listActiveByLocation(location.getId()).size();
-
+	private void confirmArchiveLocation(Location location, int garageCount) {
 		ConfirmDialog dialog = new ConfirmDialog();
 		dialog.setHeader("Archive location");
 		String detail = garageCount == 0
