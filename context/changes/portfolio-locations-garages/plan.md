@@ -455,13 +455,13 @@ production DB retains it until `V4` runs on the next deploy, which is expected a
 
 #### Automated
 
-- [x] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [x] 3.2 Full suite green: `mvnw.cmd test`
-- [x] 3.3 Build packages: `mvnw.cmd package`
+- [x] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests` — 3233abc
+- [x] 3.2 Full suite green: `mvnw.cmd test` — 3233abc
+- [x] 3.3 Build packages: `mvnw.cmd package` — 3233abc
 
 #### Manual
 
-- [x] 3.4 Owner can add/rename/archive a location and add/edit/archive a garage; status badge shows free/problem; problem reason capture + clear works
-- [x] 3.5 Archiving a location shows the garage-count confirm; location + garages leave the active view (rows retained)
-- [x] 3.6 Anonymous hit on `/locations` redirects to `/login`
-- [x] 3.7 Core path usable on a phone-sized viewport
+- [x] 3.4 Owner can add/rename/archive a location and add/edit/archive a garage; status badge shows free/problem; problem reason capture + clear works — 3233abc
+- [x] 3.5 Archiving a location shows the garage-count confirm; location + garages leave the active view (rows retained) — 3233abc
+- [x] 3.6 Anonymous hit on `/locations` redirects to `/login` — 3233abc
+- [x] 3.7 Core path usable on a phone-sized viewport — 3233abc

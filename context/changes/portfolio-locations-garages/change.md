@@ -1,7 +1,7 @@
 ---
 change_id: portfolio-locations-garages
 title: Manage locations & garages with per-garage status
-status: implementing
+status: implemented
 created: 2026-05-31
 updated: 2026-06-03
 archived_at: null
