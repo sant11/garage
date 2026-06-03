@@ -58,6 +58,14 @@ class SecurityGatingTests {
 	}
 
 	@Test
+	void unauthenticatedRequestToLocationsRedirectsToLogin() throws Exception {
+		// R5: the S-02 domain route is owner-gated like every other view.
+		mockMvc.perform(get("/locations"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
 	void actuatorHealthIsPublic() throws Exception {
 		mockMvc.perform(get("/actuator/health"))
 			.andExpect(status().isOk());

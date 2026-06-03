@@ -55,6 +55,16 @@ public class Garage extends ArchivableEntity {
 		this.monthlyRent = monthlyRent;
 	}
 
+	/**
+	 * Surrogate key, widened to {@code public} so the portfolio view can pass it to
+	 * {@code GarageService} (the protected {@code BaseEntity#getId} is reachable only by
+	 * subclasses, and views are not).
+	 */
+	@Override
+	public Long getId() {
+		return super.getId();
+	}
+
 	public Location getLocation() {
 		return location;
 	}

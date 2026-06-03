@@ -1,10 +1,14 @@
 package com.example.garageops.ui;
 
+import com.example.garageops.locations.LocationsView;
 import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 
 import jakarta.annotation.security.PermitAll;
@@ -20,6 +24,9 @@ import jakarta.annotation.security.PermitAll;
  * <p>Logout is delegated to the shared {@link AuthenticationContext} bean (constructor-injected)
  * — {@link AuthenticationContext#logout()} invalidates the session and redirects to the
  * configured success URL, where the security chain bounces the now-anonymous user to the login.
+ *
+ * <p>The drawer holds the app navigation (S-02 onward); a {@link DrawerToggle} in the navbar opens
+ * it, which also keeps nav reachable on a phone-sized viewport.
  */
 @PermitAll
 public class MainLayout extends AppLayout {
@@ -38,6 +45,10 @@ public class MainLayout extends AppLayout {
 		header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 		header.setPadding(true);
 
-		addToNavbar(header);
+		addToNavbar(new DrawerToggle(), header);
+
+		SideNav nav = new SideNav();
+		nav.addItem(new SideNavItem("Locations", LocationsView.class));
+		addToDrawer(nav);
 	}
 }

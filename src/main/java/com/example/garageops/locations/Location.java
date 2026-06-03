@@ -31,6 +31,16 @@ public class Location extends ArchivableEntity {
 		this.name = name;
 	}
 
+	/**
+	 * Surrogate key, widened to {@code public} so the portfolio view can pass it to
+	 * {@code LocationService} (the protected {@code BaseEntity#getId} is reachable only by
+	 * subclasses, and views are not).
+	 */
+	@Override
+	public Long getId() {
+		return super.getId();
+	}
+
 	public String getName() {
 		return name;
 	}

@@ -444,24 +444,24 @@ production DB retains it until `V4` runs on the next deploy, which is expected a
 
 #### Automated
 
-- [x] 2.1 Service unit tests pass: `mvnw.cmd test -Dtest=LocationServiceTests,GarageServiceTests`
-- [x] 2.2 Full suite green: `mvnw.cmd test`
+- [x] 2.1 Service unit tests pass: `mvnw.cmd test -Dtest=LocationServiceTests,GarageServiceTests` — 136e891
+- [x] 2.2 Full suite green: `mvnw.cmd test` — 136e891
 
 #### Manual
 
-- [x] 2.3 Cascade-stamp test asserts children archived (not deleted) and no repository delete is called
+- [x] 2.3 Cascade-stamp test asserts children archived (not deleted) and no repository delete is called — 136e891
 
 ### Phase 3: Views, navigation & gating
 
 #### Automated
 
-- [ ] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [ ] 3.2 Full suite green: `mvnw.cmd test`
-- [ ] 3.3 Build packages: `mvnw.cmd package`
+- [x] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
+- [x] 3.2 Full suite green: `mvnw.cmd test`
+- [x] 3.3 Build packages: `mvnw.cmd package`
 
 #### Manual
 
-- [ ] 3.4 Owner can add/rename/archive a location and add/edit/archive a garage; status badge shows free/problem; problem reason capture + clear works
-- [ ] 3.5 Archiving a location shows the garage-count confirm; location + garages leave the active view (rows retained)
-- [ ] 3.6 Anonymous hit on `/locations` redirects to `/login`
-- [ ] 3.7 Core path usable on a phone-sized viewport
+- [x] 3.4 Owner can add/rename/archive a location and add/edit/archive a garage; status badge shows free/problem; problem reason capture + clear works
+- [x] 3.5 Archiving a location shows the garage-count confirm; location + garages leave the active view (rows retained)
+- [x] 3.6 Anonymous hit on `/locations` redirects to `/login`
+- [x] 3.7 Core path usable on a phone-sized viewport
