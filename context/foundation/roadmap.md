@@ -3,7 +3,7 @@ project: GarageOps
 version: 1
 status: draft
 created: 2026-05-26
-updated: 2026-05-30
+updated: 2026-06-03
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -32,7 +32,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | done     |
 | F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | done     |
 | S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | done     |
-| S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | proposed |
+| S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | done     |
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | proposed |
 | S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | proposed |
 | S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | proposed |
@@ -113,7 +113,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** garage status "rented" (part of FR-005) is derived from active contracts (S-04); this slice ships free/problem and the rented state activates once S-04 lands. Archiving a location/garage exercises the FR-021 retain-underlying-records rule.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Manage tenants
 
@@ -219,3 +219,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **F-02: (foundation) JPA persistence + archive-only convention established** — Archived 2026-05-28 → `context/archive/2026-05-27-jpa-persistence-foundation/`. Lesson: —.
 - **F-01: (foundation) Spring Security wired; all routes gated to login** — Archived 2026-05-28 → `context/archive/2026-05-26-access-control-foundation/`. Lesson: —.
 - **S-01: Owner can sign up with email + password, log in from any device with the same credentials, and log out.** — Archived 2026-05-30 → `context/archive/2026-05-28-owner-auth-signup-login/`. Lesson: —.
+- **S-02: Owner can add, rename, and archive locations; add garages (label + default monthly rent) to a location; and view all garages grouped by location with each garage's status (free / problem; "rented" activates once contracts exist).** — Archived 2026-06-03 → `context/archive/2026-05-31-portfolio-locations-garages/`. Lesson: @ManyToOne LAZY needs explicit fetch-joins on off-session view/grouping paths (open-in-view=false) — codified in AGENTS.md.
