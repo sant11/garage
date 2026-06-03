@@ -431,25 +431,25 @@ production DB retains it until `V4` runs on the next deploy, which is expected a
 
 #### Automated
 
-- [x] 1.1 Project compiles: `mvnw.cmd -o compile`
-- [x] 1.2 Entity unit tests pass: `mvnw.cmd test -Dtest=LocationTests,GarageTests`
-- [x] 1.3 Full suite still green: `mvnw.cmd test`
+- [x] 1.1 Project compiles: `mvnw.cmd -o compile` — c6bde6d
+- [x] 1.2 Entity unit tests pass: `mvnw.cmd test -Dtest=LocationTests,GarageTests` — c6bde6d
+- [x] 1.3 Full suite still green: `mvnw.cmd test` — c6bde6d
 
 #### Manual
 
-- [x] 1.4 App boots with `ddl-auto=validate` against `V3`/`V4` (no schema-mismatch failure)
-- [x] 1.5 `deploy_smoke_test` gone; `locations` and `garages` tables present
+- [x] 1.4 App boots with `ddl-auto=validate` against `V3`/`V4` (no schema-mismatch failure) — c6bde6d
+- [x] 1.5 `deploy_smoke_test` gone; `locations` and `garages` tables present — c6bde6d
 
 ### Phase 2: Services & business logic
 
 #### Automated
 
-- [ ] 2.1 Service unit tests pass: `mvnw.cmd test -Dtest=LocationServiceTests,GarageServiceTests`
-- [ ] 2.2 Full suite green: `mvnw.cmd test`
+- [x] 2.1 Service unit tests pass: `mvnw.cmd test -Dtest=LocationServiceTests,GarageServiceTests`
+- [x] 2.2 Full suite green: `mvnw.cmd test`
 
 #### Manual
 
-- [ ] 2.3 Cascade-stamp test asserts children archived (not deleted) and no repository delete is called
+- [x] 2.3 Cascade-stamp test asserts children archived (not deleted) and no repository delete is called
 
 ### Phase 3: Views, navigation & gating
 
