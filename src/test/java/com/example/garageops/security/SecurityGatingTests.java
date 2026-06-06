@@ -66,6 +66,22 @@ class SecurityGatingTests {
 	}
 
 	@Test
+	void unauthenticatedRequestToTenantsRedirectsToLogin() throws Exception {
+		// R5: the S-03 tenants list route is owner-gated like every other view.
+		mockMvc.perform(get("/tenants"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
+	void unauthenticatedRequestToTenantProfileRedirectsToLogin() throws Exception {
+		// R5: the new parameterized profile route inherits owner-gating at introduction.
+		mockMvc.perform(get("/tenants/1"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
 	void actuatorHealthIsPublic() throws Exception {
 		mockMvc.perform(get("/actuator/health"))
 			.andExpect(status().isOk());

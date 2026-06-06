@@ -1,6 +1,7 @@
 package com.example.garageops.ui;
 
 import com.example.garageops.locations.LocationsView;
+import com.example.garageops.tenants.TenantsView;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
@@ -49,6 +50,7 @@ public class MainLayout extends AppLayout {
 
 		SideNav nav = new SideNav();
 		nav.addItem(new SideNavItem("Locations", LocationsView.class));
+		nav.addItem(new SideNavItem("Tenants", TenantsView.class));
 		addToDrawer(nav);
 	}
 }
