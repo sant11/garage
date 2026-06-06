@@ -1,10 +1,10 @@
 ---
 change_id: tenant-management
 title: Manage tenants with profile & contract history
-status: impl_reviewed
+status: archived
 created: 2026-06-03
 updated: 2026-06-06
-archived_at: null
+archived_at: 2026-06-06T20:20:56Z
 ---
 
 ## Notes
