@@ -473,13 +473,13 @@ populate them on first persist.
 
 #### Automated
 
-- [x] 3.1 Full suite passes: `mvnw.cmd test`
-- [x] 3.2 Gating assertions pass: `mvnw.cmd test -Dtest=SecurityGatingTests`
+- [x] 3.1 Full suite passes: `mvnw.cmd test` — 2b8b27b
+- [x] 3.2 Gating assertions pass: `mvnw.cmd test -Dtest=SecurityGatingTests` — 2b8b27b
 
 #### Manual
 
-- [x] 3.3 Owner sees Tenants nav and can add / edit / archive with auto-refresh
-- [x] 3.4 Add requires a name; contact accepted empty; edit updates both fields
-- [x] 3.5 Archive shows "records are retained" confirm and drops the tenant from the active list
-- [x] 3.6 View opens `tenants/:id` showing name + friendly empty contract section with an open header slot
-- [x] 3.7 Unknown / archived tenant id yields a 404, not a blank/partial profile
+- [x] 3.3 Owner sees Tenants nav and can add / edit / archive with auto-refresh — 2b8b27b
+- [x] 3.4 Add requires a name; contact accepted empty; edit updates both fields — 2b8b27b
+- [x] 3.5 Archive shows "records are retained" confirm and drops the tenant from the active list — 2b8b27b
+- [x] 3.6 View opens `tenants/:id` showing name + friendly empty contract section with an open header slot — 2b8b27b
+- [x] 3.7 Unknown / archived tenant id yields a 404, not a blank/partial profile — 2b8b27b

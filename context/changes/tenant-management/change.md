@@ -1,7 +1,7 @@
 ---
 change_id: tenant-management
 title: Manage tenants with profile & contract history
-status: implementing
+status: implemented
 created: 2026-06-03
 updated: 2026-06-06
 archived_at: null
