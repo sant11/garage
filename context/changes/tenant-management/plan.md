@@ -455,19 +455,19 @@ populate them on first persist.
 
 #### Automated
 
-- [x] 1.1 Code compiles and the existing suite passes: `mvnw.cmd test`
+- [x] 1.1 Code compiles and the existing suite passes: `mvnw.cmd test` — a668c22
 
 #### Manual
 
-- [x] 1.2 App boots clean; Flyway applies `V5` and `ddl-auto=validate` reports no mismatch
-- [x] 1.3 The `tenants` table exists with the expected columns/types after boot
+- [x] 1.2 App boots clean; Flyway applies `V5` and `ddl-auto=validate` reports no mismatch — a668c22
+- [x] 1.3 The `tenants` table exists with the expected columns/types after boot — a668c22
 
 ### Phase 2: Service Layer + R4 Oracle
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `mvnw.cmd test`
-- [ ] 2.2 The archive oracle passes: `mvnw.cmd test -Dtest=TenantServiceTests`
+- [x] 2.1 Unit tests pass: `mvnw.cmd test`
+- [x] 2.2 The archive oracle passes: `mvnw.cmd test -Dtest=TenantServiceTests`
 
 ### Phase 3: Views, Navigation & Gating
 
