@@ -1,6 +1,7 @@
 package com.example.garageops.tenants;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -14,6 +15,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
+
+import jakarta.persistence.EntityNotFoundException;
 
 /**
  * Verifies {@link TenantService} business logic with mocked repositories — no Spring context, no
@@ -67,6 +70,26 @@ class TenantServiceTests {
 		given(tenantRepository.findByArchivedAtIsNullOrderByNameAsc()).willReturn(List.of(active));
 
 		assertThat(service.listActive()).containsExactly(active);
+	}
+
+	@Test
+	void findActiveReturnsTheTenantWhenItIsActive() {
+		Tenant tenant = new Tenant("Acme Co", "acme@example.com");
+		given(tenantRepository.findById(1L)).willReturn(Optional.of(tenant));
+
+		assertThat(service.findActive(1L)).isSameAs(tenant);
+	}
+
+	@Test
+	void findActiveThrowsWhenTheTenantIsArchived() {
+		// An archived tenant must not surface on the profile route — the service throws so the route
+		// can 404 rather than render an archived profile.
+		Tenant tenant = new Tenant("Acme Co", "acme@example.com");
+		tenant.archive();
+		given(tenantRepository.findById(1L)).willReturn(Optional.of(tenant));
+
+		assertThatThrownBy(() -> service.findActive(1L))
+			.isInstanceOf(EntityNotFoundException.class);
 	}
 
 	@Test

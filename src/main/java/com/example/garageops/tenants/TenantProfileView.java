@@ -52,8 +52,9 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 		Tenant tenant;
 		try {
 			tenant = tenantService.findActive(id);
-		} catch (EntityNotFoundException e) {
-			// Unknown or archived id: surface a 404 rather than rendering a blank/partial profile.
+		} catch (EntityNotFoundException | IllegalArgumentException e) {
+			// Unknown, archived, or null/blank id: surface a 404 rather than rendering a blank/partial
+			// profile. IllegalArgumentException guards the empty-segment case (findById(null)).
 			throw new NotFoundException("Unknown tenant: " + id);
 		}
 		render(tenant);
