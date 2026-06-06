@@ -110,6 +110,7 @@ smoke test exist, all clustered in the auth foundation (`account/`,
 | UI / e2e | none yet — see §3 Phase 3 | — | UI is Vaadin Flow 25 (server-side Java). Karibu-Testing (browserless) vs Playwright is a Phase 3 decision; no Playwright MCP in this session. |
 | mocking | Mockito (transitive via starter) | — | Used DB-free in `OwnerBootstrapTests`/`SecurityGatingTests`; mock at the boundary, not internal logic. |
 | (optional) AI-native | multimodal visual review — checked: 2026-06-03 | n/a | **When NOT to use:** never on the overdue/vacant logic (deterministic — use units/integration); reserved for 1 screen of dashboard empty-state copy in Phase 3. |
+exit
 
 **Stack grounding tools (current session):**
 - Docs: Vaadin MCP available — can ground Vaadin 25 view/security and test-utility APIs for Phase 2/3; Context7 / framework-docs MCP not available in current session; checked: 2026-06-03
