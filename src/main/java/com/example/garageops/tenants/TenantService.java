@@ -6,6 +6,9 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 
 /**
@@ -13,22 +16,27 @@ import jakarta.persistence.EntityNotFoundException;
  * profile route, and <b>archive</b>.
  *
  * <p>Archive is the load-bearing operation: per FR-021 and the {@code ArchivableEntity} convention,
- * it stamps {@code archived_at} and <em>retains</em> the row — never deletes. Unlike
- * {@code LocationService}, a tenant has no children (no {@code @OneToMany}, the no-parent-collection
- * rule), so {@code archive()} is a single idempotent flag-flip with no cascade pass.
+ * it stamps {@code archived_at} and <em>retains</em> the row — never deletes. A tenant has no
+ * {@code @OneToMany} children (the no-parent-collection rule), but it does own contracts on the FK
+ * child side, so {@code archive} cascade-stamps the tenant's active contracts via an explicit
+ * loop-and-stamp pass (mirroring {@code LocationService}) — never a JPA cascade, never a delete.
  *
- * <p>The repository is injected as an {@link ObjectProvider} and resolved per call, mirroring
+ * <p>The repositories are injected as {@link ObjectProvider}s and resolved per call, mirroring
  * {@code LocationService}: this keeps the bean constructible in the DB-free test context, where JPA
- * autoconfig (and thus the repository beans) is excluded by convention. In production the repository
- * is always present.
+ * autoconfig (and thus the repository beans) is excluded by convention. In production the
+ * repositories are always present.
  */
 @Service
 public class TenantService {
 
 	private final ObjectProvider<TenantRepository> tenantRepository;
+	private final ObjectProvider<ContractRepository> contractRepository;
 
-	public TenantService(ObjectProvider<TenantRepository> tenantRepository) {
+	public TenantService(
+			ObjectProvider<TenantRepository> tenantRepository,
+			ObjectProvider<ContractRepository> contractRepository) {
 		this.tenantRepository = tenantRepository;
+		this.contractRepository = contractRepository;
 	}
 
 	/** Add a new tenant. */
@@ -62,15 +70,19 @@ public class TenantService {
 	}
 
 	/**
-	 * Archive a tenant. Loads the tenant, stamps it, and saves — a retain operation, never a delete.
-	 * {@code archive()} is idempotent, so a re-run leaves an existing archive moment intact. A tenant
-	 * has no children, so there is no cascade pass.
+	 * Archive a tenant and cascade-stamp its active contracts (FR-021). Loads the tenant, stamps it,
+	 * then loads its non-archived contracts and stamps each — a retain pass, never a delete.
+	 * {@code archive()} is idempotent, so a re-run leaves existing archive moments intact.
 	 */
 	@Transactional
 	public void archive(Long id) {
 		Tenant tenant = require(id);
 		tenant.archive();
 		tenants().save(tenant);
+
+		List<Contract> activeContracts = contracts().findByTenantIdAndArchivedAtIsNull(id);
+		activeContracts.forEach(Contract::archive);
+		contracts().saveAll(activeContracts);
 	}
 
 	private Tenant require(Long id) {
@@ -80,5 +92,9 @@ public class TenantService {
 
 	private TenantRepository tenants() {
 		return tenantRepository.getObject();
+	}
+
+	private ContractRepository contracts() {
+		return contractRepository.getObject();
 	}
 }

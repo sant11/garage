@@ -302,25 +302,25 @@ The portfolio "rented" derivation must stay a single batch query across all disp
 
 #### Automated
 
-- [x] 1.1 Compiles and schema validates against V6: `mvnw.cmd verify`
-- [x] 1.2 Entity unit tests pass: `mvnw.cmd test -Dtest=ContractTests`
-- [x] 1.3 App boots (Flyway applies V6, Hibernate validates the mapping): `mvnw.cmd test -Dtest=GarageopsApplicationTests`
+- [x] 1.1 Compiles and schema validates against V6: `mvnw.cmd verify` — 40dcfc3
+- [x] 1.2 Entity unit tests pass: `mvnw.cmd test -Dtest=ContractTests` — 40dcfc3
+- [x] 1.3 App boots (Flyway applies V6, Hibernate validates the mapping): `mvnw.cmd test -Dtest=GarageopsApplicationTests` — 40dcfc3
 
 #### Manual
 
-- [x] 1.4 V6 columns match the `Contract` entity field-by-field (FK names, `NUMERIC(10,2)` precision)
+- [x] 1.4 V6 columns match the `Contract` entity field-by-field (FK names, `NUMERIC(10,2)` precision) — 40dcfc3
 
 ### Phase 2: Service layer — ContractService + FR-021 retention cascade
 
 #### Automated
 
-- [ ] 2.1 All service tests pass: `mvnw.cmd test -Dtest=ContractServiceTests`
-- [ ] 2.2 Cascade retention tests pass: `mvnw.cmd test -Dtest=TenantServiceTests,GarageServiceTests,LocationServiceTests`
-- [ ] 2.3 Full suite green: `mvnw.cmd verify`
+- [x] 2.1 All service tests pass: `mvnw.cmd test -Dtest=ContractServiceTests`
+- [x] 2.2 Cascade retention tests pass: `mvnw.cmd test -Dtest=TenantServiceTests,GarageServiceTests,LocationServiceTests`
+- [x] 2.3 Full suite green: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 2.4 Overlap predicate reviewed against worked boundary cases (single-day touch, fully-contained)
+- [x] 2.4 Overlap predicate reviewed against worked boundary cases (single-day touch, fully-contained)
 
 ### Phase 3: Views & navigation — garage detail, history, create/end, tenant profile, gating
 

@@ -9,12 +9,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
+
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractRepository;
+import com.example.garageops.garages.Garage;
+import com.example.garageops.locations.Location;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -29,7 +36,9 @@ import jakarta.persistence.EntityNotFoundException;
 class TenantServiceTests {
 
 	private final TenantRepository tenantRepository = mock(TenantRepository.class);
-	private final TenantService service = new TenantService(providerOf(tenantRepository));
+	private final ContractRepository contractRepository = mock(ContractRepository.class);
+	private final TenantService service =
+		new TenantService(providerOf(tenantRepository), providerOf(contractRepository));
 
 	// Wrap a mock repository in a mocked ObjectProvider, mirroring the production ObjectProvider
 	// wiring exercised by locations/LocationServiceTests.
@@ -93,20 +102,34 @@ class TenantServiceTests {
 	}
 
 	@Test
-	void archiveStampsTheTenantAndDeletesNothing() {
+	void archiveStampsTheTenantAndCascadeStampsItsContractsAndDeletesNothing() {
 		Tenant tenant = new Tenant("Acme Co", "acme@example.com");
+		Contract contract = contractFor(tenant);
 		given(tenantRepository.findById(1L)).willReturn(Optional.of(tenant));
+		given(contractRepository.findByTenantIdAndArchivedAtIsNull(1L)).willReturn(List.of(contract));
 
 		service.archive(1L);
 
-		// The tenant is stamped — never removed.
+		// The tenant and its contracts are stamped — never removed (FR-021 retention).
 		assertThat(tenant.isArchived()).isTrue();
+		assertThat(contract.isArchived()).isTrue();
 		verify(tenantRepository).save(tenant);
+		verify(contractRepository).saveAll(List.of(contract));
 
-		// R4: no delete reaches the repository.
+		// R4: no delete reaches either repository.
 		verify(tenantRepository, never()).delete(any());
 		verify(tenantRepository, never()).deleteById(anyLong());
 		verify(tenantRepository, never()).deleteAll();
 		verify(tenantRepository, never()).deleteAll(any());
+		verify(contractRepository, never()).delete(any());
+		verify(contractRepository, never()).deleteById(anyLong());
+		verify(contractRepository, never()).deleteAll();
+		verify(contractRepository, never()).deleteAll(any());
+	}
+
+	private static Contract contractFor(Tenant tenant) {
+		Garage garage = new Garage(new Location("Downtown"), "A-1", new BigDecimal("250.00"));
+		return new Contract(tenant, garage, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31),
+			new BigDecimal("250.00"), 1);
 	}
 }

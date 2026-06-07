@@ -43,4 +43,12 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
 
 	/** Non-archived contracts for a tenant — the tenant-archive cascade loops these to stamp them. */
 	List<Contract> findByTenantIdAndArchivedAtIsNull(Long tenantId);
+
+	/**
+	 * Non-archived contracts across several garages in one query — the location-archive cascade
+	 * stamps them in a single batch (the location already cascades to its garages, and each garage's
+	 * contracts must be stamped too), avoiding a query-per-garage.
+	 */
+	@Query("select c from Contract c where c.garage.id in :garageIds and c.archivedAt is null")
+	List<Contract> findNonArchivedByGarageIdIn(@Param("garageIds") List<Long> garageIds);
 }

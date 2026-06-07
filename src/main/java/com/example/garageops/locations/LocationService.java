@@ -6,6 +6,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.garages.Garage;
 import com.example.garageops.garages.GarageRepository;
 
@@ -30,12 +32,15 @@ public class LocationService {
 
 	private final ObjectProvider<LocationRepository> locationRepository;
 	private final ObjectProvider<GarageRepository> garageRepository;
+	private final ObjectProvider<ContractRepository> contractRepository;
 
 	public LocationService(
 			ObjectProvider<LocationRepository> locationRepository,
-			ObjectProvider<GarageRepository> garageRepository) {
+			ObjectProvider<GarageRepository> garageRepository,
+			ObjectProvider<ContractRepository> contractRepository) {
 		this.locationRepository = locationRepository;
 		this.garageRepository = garageRepository;
+		this.contractRepository = contractRepository;
 	}
 
 	/** Add a new location. */
@@ -56,9 +61,10 @@ public class LocationService {
 	}
 
 	/**
-	 * Archive a location and cascade-stamp its active garages. Loads the location, stamps it, then
-	 * loads its active garages and stamps each — a retain pass, never a delete. {@code archive()} is
-	 * idempotent, so a re-run leaves existing archive moments intact.
+	 * Archive a location and cascade-stamp its active garages <em>and their contracts</em> (FR-021).
+	 * Loads the location, stamps it, stamps its active garages, then stamps those garages' active
+	 * contracts in one batch query — a retain pass, never a delete. {@code archive()} is idempotent,
+	 * so a re-run leaves existing archive moments intact.
 	 */
 	@Transactional
 	public void archive(Long locationId) {
@@ -69,6 +75,13 @@ public class LocationService {
 		List<Garage> activeGarages = garages().findByLocationIdAndArchivedAtIsNull(locationId);
 		activeGarages.forEach(Garage::archive);
 		garages().saveAll(activeGarages);
+
+		List<Long> garageIds = activeGarages.stream().map(Garage::getId).toList();
+		if (!garageIds.isEmpty()) {
+			List<Contract> activeContracts = contracts().findNonArchivedByGarageIdIn(garageIds);
+			activeContracts.forEach(Contract::archive);
+			contracts().saveAll(activeContracts);
+		}
 	}
 
 	private Location require(Long id) {
@@ -82,5 +95,9 @@ public class LocationService {
 
 	private GarageRepository garages() {
 		return garageRepository.getObject();
+	}
+
+	private ContractRepository contracts() {
+		return contractRepository.getObject();
 	}
 }

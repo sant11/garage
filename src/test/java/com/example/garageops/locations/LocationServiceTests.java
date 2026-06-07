@@ -2,6 +2,7 @@ package com.example.garageops.locations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,8 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
 
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.garages.Garage;
 import com.example.garageops.garages.GarageRepository;
+import com.example.garageops.tenants.Tenant;
 
 /**
  * Verifies {@link LocationService} business logic with mocked repositories — no Spring context, no
@@ -31,8 +36,9 @@ class LocationServiceTests {
 
 	private final LocationRepository locationRepository = mock(LocationRepository.class);
 	private final GarageRepository garageRepository = mock(GarageRepository.class);
-	private final LocationService service =
-		new LocationService(providerOf(locationRepository), providerOf(garageRepository));
+	private final ContractRepository contractRepository = mock(ContractRepository.class);
+	private final LocationService service = new LocationService(
+		providerOf(locationRepository), providerOf(garageRepository), providerOf(contractRepository));
 
 	// Wrap a mock repository in a mocked ObjectProvider, mirroring the production ObjectProvider
 	// wiring exercised by account/OwnerBootstrapTests.
@@ -74,27 +80,35 @@ class LocationServiceTests {
 	}
 
 	@Test
-	void archiveCascadeStampsActiveGaragesAndDeletesNothing() {
+	void archiveCascadeStampsActiveGaragesAndTheirContractsAndDeletesNothing() {
 		Location location = new Location("Downtown");
 		Garage g1 = new Garage(location, "A-1", new BigDecimal("250.00"));
 		Garage g2 = new Garage(location, "A-2", new BigDecimal("300.00"));
+		Contract c1 = new Contract(new Tenant("Acme Co", null), g1,
+			LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31), new BigDecimal("250.00"), 1);
 		given(locationRepository.findById(1L)).willReturn(Optional.of(location));
 		given(garageRepository.findByLocationIdAndArchivedAtIsNull(1L)).willReturn(List.of(g1, g2));
+		given(contractRepository.findNonArchivedByGarageIdIn(anyList())).willReturn(List.of(c1));
 
 		service.archive(1L);
 
-		// Location and every active garage are stamped — never removed.
+		// Location, every active garage, and their contracts are stamped — never removed.
 		assertThat(location.isArchived()).isTrue();
 		assertThat(g1.isArchived()).isTrue();
 		assertThat(g2.isArchived()).isTrue();
+		assertThat(c1.isArchived()).isTrue();
 		verify(locationRepository).save(location);
 		verify(garageRepository).saveAll(List.of(g1, g2));
+		verify(contractRepository).saveAll(List.of(c1));
 
-		// R4: no delete reaches either repository.
+		// R4: no delete reaches any repository.
 		verify(locationRepository, never()).delete(any());
 		verify(locationRepository, never()).deleteById(anyLong());
 		verify(garageRepository, never()).delete(any());
 		verify(garageRepository, never()).deleteById(anyLong());
 		verify(garageRepository, never()).deleteAll(any());
+		verify(contractRepository, never()).delete(any());
+		verify(contractRepository, never()).deleteById(anyLong());
+		verify(contractRepository, never()).deleteAll(any());
 	}
 }

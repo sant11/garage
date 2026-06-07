@@ -7,7 +7,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.locations.Location;
 import com.example.garageops.locations.LocationRepository;
 
@@ -31,12 +34,15 @@ public class GarageService {
 
 	private final ObjectProvider<GarageRepository> garageRepository;
 	private final ObjectProvider<LocationRepository> locationRepository;
+	private final ObjectProvider<ContractRepository> contractRepository;
 
 	public GarageService(
 			ObjectProvider<GarageRepository> garageRepository,
-			ObjectProvider<LocationRepository> locationRepository) {
+			ObjectProvider<LocationRepository> locationRepository,
+			ObjectProvider<ContractRepository> contractRepository) {
 		this.garageRepository = garageRepository;
 		this.locationRepository = locationRepository;
+		this.contractRepository = contractRepository;
 	}
 
 	/** Add a garage under a location. Rejects an archived parent location. */
@@ -70,11 +76,19 @@ public class GarageService {
 		garages().save(garage);
 	}
 
-	/** Archive a garage — stamps {@code archived_at} and retains the row (never deletes). */
+	/**
+	 * Archive a garage and cascade-stamp its active contracts (FR-021). Stamps the garage, then loads
+	 * its non-archived contracts and stamps each — a retain pass, never a delete.
+	 */
+	@Transactional
 	public void archive(Long garageId) {
 		Garage garage = require(garageId);
 		garage.archive();
 		garages().save(garage);
+
+		List<Contract> activeContracts = contracts().findByGarageIdAndArchivedAtIsNull(garageId);
+		activeContracts.forEach(Contract::archive);
+		contracts().saveAll(activeContracts);
 	}
 
 	/** @return active (non-archived) garages under a location, for the per-location grid. */
@@ -105,5 +119,9 @@ public class GarageService {
 
 	private LocationRepository locations() {
 		return locationRepository.getObject();
+	}
+
+	private ContractRepository contracts() {
+		return contractRepository.getObject();
 	}
 }
