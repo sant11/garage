@@ -21,10 +21,12 @@ setup('authenticate as owner', async ({ page }) => {
 	await page.goto('/login');
 
 	// Vaadin <vaadin-login-form> uses open shadow DOM, which Playwright pierces,
-	// so the component's default i18n labels resolve directly. If the form is
-	// ever re-themed/relabeled, update these three locators.
-	await page.getByLabel('Username').fill(USERNAME);
-	await page.getByLabel('Password').fill(PASSWORD);
+	// so the component's default i18n labels resolve directly. `exact` keeps the
+	// password label off the "Show password" reveal button (whose accessible
+	// name also contains "Password"). If the form is re-themed/relabeled, update
+	// these locators.
+	await page.getByLabel('Username', { exact: true }).fill(USERNAME);
+	await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
 	await page.getByRole('button', { name: 'Log in' }).click();
 
 	// A successful form-login leaves /login (Spring redirects to the saved
