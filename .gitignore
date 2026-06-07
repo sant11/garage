@@ -55,3 +55,9 @@ vite.generated.ts
 ### Playwright CLI (local browser state — contains session cookies) ###
 auth.json
 .playwright-cli/
+
+### Playwright E2E (Node project under /e2e — test artifacts & reports) ###
+/e2e/test-results/
+/e2e/playwright-report/
+/e2e/blob-report/
+/e2e/playwright/.cache/
