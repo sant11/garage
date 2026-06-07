@@ -1,0 +1,25 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Write|Edit",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "powershell.exe",
+						"args": [
+							"-NoProfile",
+							"-ExecutionPolicy",
+							"Bypass",
+							"-File",
+							"${CLAUDE_PROJECT_DIR}\\.claude\\hooks\\compile-check.ps1"
+						],
+						"timeout": 120,
+						"statusMessage": "javac: lint + typecheck edytowanego pliku..."
+					}
+				]
+			}
+		]
+	}
+}

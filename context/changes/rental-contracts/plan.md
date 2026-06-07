@@ -302,13 +302,13 @@ The portfolio "rented" derivation must stay a single batch query across all disp
 
 #### Automated
 
-- [ ] 1.1 Compiles and schema validates against V6: `mvnw.cmd verify`
-- [ ] 1.2 Entity unit tests pass: `mvnw.cmd test -Dtest=ContractTests`
-- [ ] 1.3 App boots (Flyway applies V6, Hibernate validates the mapping): `mvnw.cmd test -Dtest=GarageopsApplicationTests`
+- [x] 1.1 Compiles and schema validates against V6: `mvnw.cmd verify`
+- [x] 1.2 Entity unit tests pass: `mvnw.cmd test -Dtest=ContractTests`
+- [x] 1.3 App boots (Flyway applies V6, Hibernate validates the mapping): `mvnw.cmd test -Dtest=GarageopsApplicationTests`
 
 #### Manual
 
-- [ ] 1.4 V6 columns match the `Contract` entity field-by-field (FK names, `NUMERIC(10,2)` precision)
+- [x] 1.4 V6 columns match the `Contract` entity field-by-field (FK names, `NUMERIC(10,2)` precision)
 
 ### Phase 2: Service layer — ContractService + FR-021 retention cascade
 
