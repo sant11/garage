@@ -43,8 +43,15 @@ application-*-local.properties
 .railway/
 .mcp.json
 
+### Claude Code hooks (machine-specific cache) ###
+.claude/hooks/classpath.txt
+
 ### Vaadin (generated frontend artifacts) ###
 node_modules/
 src/main/frontend/generated/
 src/main/bundles/
 vite.generated.ts
+
+### Playwright CLI (local browser state — contains session cookies) ###
+auth.json
+.playwright-cli/
