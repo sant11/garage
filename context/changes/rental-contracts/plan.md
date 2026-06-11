@@ -326,14 +326,14 @@ The portfolio "rented" derivation must stay a single batch query across all disp
 
 #### Automated
 
-- [x] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [x] 3.2 Full build + suite green: `mvnw.cmd verify`
+- [x] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests` — 2c3f62e
+- [x] 3.2 Full build + suite green: `mvnw.cmd verify` — 2c3f62e
 
 #### Manual
 
-- [x] 3.3 Create from garage: tenant dropdown, rent pre-fill, payment-day bounds, garage flips to "rented"
-- [x] 3.4 Overlapping contract shows rejection and keeps the dialog open
-- [x] 3.5 Contract appears on garage history and tenant profile with two-way links
-- [x] 3.6 End-early persists as "Ended" and the garage returns to "free"
-- [x] 3.7 Archiving the parent garage and a tenant retains the contract (no hard delete)
-- [x] 3.8 `garages/<bad-id>` renders not-found; anonymous `garages/1` redirects to login
+- [x] 3.3 Create from garage: tenant dropdown, rent pre-fill, payment-day bounds, garage flips to "rented" — 2c3f62e
+- [x] 3.4 Overlapping contract shows rejection and keeps the dialog open — 2c3f62e
+- [x] 3.5 Contract appears on garage history and tenant profile with two-way links — 2c3f62e
+- [x] 3.6 End-early persists as "Ended" and the garage returns to "free" — 2c3f62e
+- [x] 3.7 Archiving the parent garage and a tenant retains the contract (no hard delete) — 2c3f62e
+- [x] 3.8 `garages/<bad-id>` renders not-found; anonymous `garages/1` redirects to login — 2c3f62e
