@@ -3,7 +3,7 @@ project: GarageOps
 version: 1
 status: draft
 created: 2026-05-26
-updated: 2026-06-06
+updated: 2026-06-11
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -34,7 +34,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | done     |
 | S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | done     |
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | done     |
-| S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | proposed |
+| S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | done |
 | S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | proposed |
 | S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | proposed |
 | S-07  | late-payer-flag            | see a frequent-late-payer flag on a tenant's profile              | S-05, S-03    | FR-020                            | proposed |
@@ -137,7 +137,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** completes the garage "rented" status (FR-005) and populates tenant profiles (FR-008); the contract's required end-date and payment-day fields are exactly the inputs the dashboard and the overdue rule consume, so this slice's shape gates S-05 and S-06. Ending a contract retains its records (FR-021).
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Record payments & derive overdue
 
@@ -221,3 +221,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-01: Owner can sign up with email + password, log in from any device with the same credentials, and log out.** — Archived 2026-05-30 → `context/archive/2026-05-28-owner-auth-signup-login/`. Lesson: —.
 - **S-02: Owner can add, rename, and archive locations; add garages (label + default monthly rent) to a location; and view all garages grouped by location with each garage's status (free / problem; "rented" activates once contracts exist).** — Archived 2026-06-03 → `context/archive/2026-05-31-portfolio-locations-garages/`. Lesson: @ManyToOne LAZY needs explicit fetch-joins on off-session view/grouping paths (open-in-view=false) — codified in AGENTS.md.
 - **S-03: Owner can add a tenant (name + contact info) and view a tenant profile listing their current and past contracts.** — Archived 2026-06-06 → `context/archive/2026-06-03-tenant-management/`. Lesson: —.
+- **S-04: Owner can create a contract linking one tenant to one garage (start date, required end date, monthly rent, payment day-of-month), end a contract early on the actual move-out date, and view a garage's full rental history.** — Archived 2026-06-11 → `context/archive/2026-06-06-rental-contracts/`. Lesson: —.

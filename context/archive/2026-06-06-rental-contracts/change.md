@@ -1,9 +1,10 @@
 ---
 change_id: rental-contracts
 title: Create/end rental contracts & garage rental history
-status: impl_reviewed
+status: archived
 created: 2026-06-06
 updated: 2026-06-11
+archived_at: 2026-06-11T20:24:43Z
 ---
 
 ## Notes
