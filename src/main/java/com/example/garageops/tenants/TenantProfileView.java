@@ -18,8 +18,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -28,8 +28,8 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
- * The tenant profile (FR-008) and FR-018 drill-through target, reached via the project's first
- * parameterized route {@code tenants/:id}. Renders the tenant's name with an open header slot for a
+ * The tenant profile (FR-008) and FR-018 drill-through target, reached as {@code tenants/<id>} via a
+ * typed {@code HasUrlParameter<Long>}. Renders the tenant's name with an open header slot for a
  * future late-payer badge (S-07), and a "current and past contracts" section.
  *
  * <p><b>The contract section is an honest empty-state, not a stub.</b> No {@code Contract} entity
@@ -43,10 +43,10 @@ import jakarta.persistence.EntityNotFoundException;
  * rather than a blank or partial profile. {@code @PermitAll} mirrors the sibling views; the parent
  * {@code MainLayout} is already annotated, so the route is owner-gated.
  */
-@Route(value = "tenants/:id", layout = MainLayout.class)
+@Route(value = "tenants", layout = MainLayout.class)
 @PageTitle("Tenant")
 @PermitAll
-public class TenantProfileView extends VerticalLayout implements BeforeEnterObserver {
+public class TenantProfileView extends VerticalLayout implements HasUrlParameter<Long> {
 
 	private final TenantService tenantService;
 	private final ContractService contractService;
@@ -60,17 +60,11 @@ public class TenantProfileView extends VerticalLayout implements BeforeEnterObse
 	}
 
 	@Override
-	public void beforeEnter(BeforeEnterEvent event) {
-		// The route is the template {@code tenants/:id} (not HasUrlParameter, which would force a second
-		// path segment and also collide with the {@code tenants} list view), so the id is read from the
-		// route parameters and parsed here.
-		String raw = event.getRouteParameters().get("id").orElse(null);
-		Long id;
-		try {
-			id = Long.valueOf(raw);
-		} catch (NumberFormatException e) {
-			throw new NotFoundException("Unknown tenant: " + raw);
-		}
+	public void setParameter(BeforeEvent event, Long id) {
+		// A single typed route parameter (Vaadin's documented choice for a single id): the Router parses
+		// the Long and 404s a non-numeric segment before this runs, so no manual parsing is needed. The
+		// exact-route {@code tenants} list view (TenantsView) takes precedence for the bare path, so the
+		// two coexist — this target only matches {@code tenants/<id>}.
 		Tenant tenant;
 		try {
 			tenant = tenantService.findActive(id);

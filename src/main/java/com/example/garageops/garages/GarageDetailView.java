@@ -25,8 +25,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -35,8 +35,8 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
- * The garage drill-through target (S-04, also serves S-06 FR-018), reached via the parameterized
- * route {@code garages/:id} from the portfolio. Shows the garage's label, location, and default
+ * The garage drill-through target (S-04, also serves S-06 FR-018), reached as {@code garages/<id>}
+ * (a typed {@code HasUrlParameter<Long>}) from the portfolio. Shows the garage's label, location, and default
  * rent; its full rental history (FR-011) with a derived Active/Ended/Upcoming status; a
  * <b>New contract</b> action (FR-009) that pre-fills the rent from the garage default and rejects an
  * overlapping window with a clear message; and an <b>End early</b> action (FR-010) on the currently
@@ -52,10 +52,10 @@ import jakarta.persistence.EntityNotFoundException;
  * rather than a blank or partial view. {@code @PermitAll} mirrors the sibling views; the parent
  * {@code MainLayout} is already annotated, so the route is owner-gated.
  */
-@Route(value = "garages/:id", layout = MainLayout.class)
+@Route(value = "garages", layout = MainLayout.class)
 @PageTitle("Garage")
 @PermitAll
-public class GarageDetailView extends VerticalLayout implements BeforeEnterObserver {
+public class GarageDetailView extends VerticalLayout implements HasUrlParameter<Long> {
 
 	private final GarageService garageService;
 	private final ContractService contractService;
@@ -74,16 +74,9 @@ public class GarageDetailView extends VerticalLayout implements BeforeEnterObser
 	}
 
 	@Override
-	public void beforeEnter(BeforeEnterEvent event) {
-		// The route is the template {@code garages/:id} (not HasUrlParameter, which would force a second
-		// path segment), so the id is read from the route parameters and parsed here.
-		String raw = event.getRouteParameters().get("id").orElse(null);
-		Long id;
-		try {
-			id = Long.valueOf(raw);
-		} catch (NumberFormatException e) {
-			throw new NotFoundException("Unknown garage: " + raw);
-		}
+	public void setParameter(BeforeEvent event, Long id) {
+		// A single typed route parameter (Vaadin's documented choice for a single id): the Router parses
+		// the Long and 404s a non-numeric segment before this runs, so no manual parsing is needed.
 		try {
 			this.garage = garageService.findActive(id);
 		} catch (EntityNotFoundException e) {
