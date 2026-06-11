@@ -314,26 +314,26 @@ The portfolio "rented" derivation must stay a single batch query across all disp
 
 #### Automated
 
-- [x] 2.1 All service tests pass: `mvnw.cmd test -Dtest=ContractServiceTests`
-- [x] 2.2 Cascade retention tests pass: `mvnw.cmd test -Dtest=TenantServiceTests,GarageServiceTests,LocationServiceTests`
-- [x] 2.3 Full suite green: `mvnw.cmd verify`
+- [x] 2.1 All service tests pass: `mvnw.cmd test -Dtest=ContractServiceTests` — 08116f7
+- [x] 2.2 Cascade retention tests pass: `mvnw.cmd test -Dtest=TenantServiceTests,GarageServiceTests,LocationServiceTests` — 08116f7
+- [x] 2.3 Full suite green: `mvnw.cmd verify` — 08116f7
 
 #### Manual
 
-- [x] 2.4 Overlap predicate reviewed against worked boundary cases (single-day touch, fully-contained)
+- [x] 2.4 Overlap predicate reviewed against worked boundary cases (single-day touch, fully-contained) — 08116f7
 
 ### Phase 3: Views & navigation — garage detail, history, create/end, tenant profile, gating
 
 #### Automated
 
-- [ ] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
-- [ ] 3.2 Full build + suite green: `mvnw.cmd verify`
+- [x] 3.1 Gating test passes: `mvnw.cmd test -Dtest=SecurityGatingTests`
+- [x] 3.2 Full build + suite green: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 3.3 Create from garage: tenant dropdown, rent pre-fill, payment-day bounds, garage flips to "rented"
-- [ ] 3.4 Overlapping contract shows rejection and keeps the dialog open
-- [ ] 3.5 Contract appears on garage history and tenant profile with two-way links
-- [ ] 3.6 End-early persists as "Ended" and the garage returns to "free"
-- [ ] 3.7 Archiving the parent garage and a tenant retains the contract (no hard delete)
-- [ ] 3.8 `garages/<bad-id>` renders not-found; anonymous `garages/1` redirects to login
+- [x] 3.3 Create from garage: tenant dropdown, rent pre-fill, payment-day bounds, garage flips to "rented"
+- [x] 3.4 Overlapping contract shows rejection and keeps the dialog open
+- [x] 3.5 Contract appears on garage history and tenant profile with two-way links
+- [x] 3.6 End-early persists as "Ended" and the garage returns to "free"
+- [x] 3.7 Archiving the parent garage and a tenant retains the contract (no hard delete)
+- [x] 3.8 `garages/<bad-id>` renders not-found; anonymous `garages/1` redirects to login

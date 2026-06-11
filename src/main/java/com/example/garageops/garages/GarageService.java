@@ -91,6 +91,20 @@ public class GarageService {
 		contracts().saveAll(activeContracts);
 	}
 
+	/**
+	 * @return the active garage for the {@code garages/:id} detail route, with its {@code location}
+	 *         fetched for display. Throws {@link EntityNotFoundException} when the id is unknown or the
+	 *         garage is archived, so the route can surface a 404 rather than render a blank/partial view.
+	 */
+	public Garage findActive(Long id) {
+		Garage garage = garages().findWithLocationById(id)
+			.orElseThrow(() -> new EntityNotFoundException("Unknown garage: " + id));
+		if (garage.isArchived()) {
+			throw new EntityNotFoundException("Unknown garage: " + id);
+		}
+		return garage;
+	}
+
 	/** @return active (non-archived) garages under a location, for the per-location grid. */
 	public List<Garage> listActiveByLocation(Long locationId) {
 		return garages().findByLocationIdAndArchivedAtIsNull(locationId);

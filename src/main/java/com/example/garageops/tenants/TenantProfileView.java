@@ -1,15 +1,25 @@
 package com.example.garageops.tenants;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractService;
 import com.example.garageops.ui.MainLayout;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -36,25 +46,36 @@ import jakarta.persistence.EntityNotFoundException;
 @Route(value = "tenants/:id", layout = MainLayout.class)
 @PageTitle("Tenant")
 @PermitAll
-public class TenantProfileView extends VerticalLayout implements HasUrlParameter<Long> {
+public class TenantProfileView extends VerticalLayout implements BeforeEnterObserver {
 
 	private final TenantService tenantService;
+	private final ContractService contractService;
 
-	public TenantProfileView(TenantService tenantService) {
+	public TenantProfileView(TenantService tenantService, ContractService contractService) {
 		this.tenantService = tenantService;
+		this.contractService = contractService;
 
 		setSizeFull();
 		setPadding(true);
 	}
 
 	@Override
-	public void setParameter(BeforeEvent event, Long id) {
+	public void beforeEnter(BeforeEnterEvent event) {
+		// The route is the template {@code tenants/:id} (not HasUrlParameter, which would force a second
+		// path segment and also collide with the {@code tenants} list view), so the id is read from the
+		// route parameters and parsed here.
+		String raw = event.getRouteParameters().get("id").orElse(null);
+		Long id;
+		try {
+			id = Long.valueOf(raw);
+		} catch (NumberFormatException e) {
+			throw new NotFoundException("Unknown tenant: " + raw);
+		}
 		Tenant tenant;
 		try {
 			tenant = tenantService.findActive(id);
-		} catch (EntityNotFoundException | IllegalArgumentException e) {
-			// Unknown, archived, or null/blank id: surface a 404 rather than rendering a blank/partial
-			// profile. IllegalArgumentException guards the empty-segment case (findById(null)).
+		} catch (EntityNotFoundException e) {
+			// Unknown or archived id: surface a 404 rather than rendering a blank/partial profile.
 			throw new NotFoundException("Unknown tenant: " + id);
 		}
 		render(tenant);
@@ -75,20 +96,64 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 		if (tenant.getContactInfo() != null && !tenant.getContactInfo().isBlank()) {
 			add(new Paragraph(tenant.getContactInfo()));
 		}
-		add(contractsSection());
+		add(contractsSection(tenant));
 	}
 
 	/**
-	 * The "current and past contracts" section. S-04 fills this seam by swapping the body — the
-	 * empty-state {@link Paragraph} becomes a {@code Grid<Contract>} — without changing the route or
-	 * the rest of this view.
+	 * The "current and past contracts" section (FR-008): the tenant's full contract history, newest
+	 * first, each row linking through to its garage. The header badge slot stays untouched (S-07).
 	 */
-	private Component contractsSection() {
+	private Component contractsSection(Tenant tenant) {
 		VerticalLayout section = new VerticalLayout();
 		section.setPadding(false);
 		section.setSpacing(true);
 		section.add(new H3("Current and past contracts"));
-		section.add(new Paragraph("No contract history yet. Contracts arrive in a later slice."));
+
+		List<Contract> contracts = contractService.forTenant(tenant.getId());
+		if (contracts.isEmpty()) {
+			section.add(new Paragraph("No contracts yet."));
+			return section;
+		}
+
+		LocalDate today = LocalDate.now();
+		Grid<Contract> grid = new Grid<>(Contract.class, false);
+		grid.addComponentColumn(this::garageLink).setHeader("Garage").setAutoWidth(true);
+		grid.addColumn(c -> c.getStartDate().toString()).setHeader("Start").setAutoWidth(true);
+		grid.addColumn(c -> c.getPlannedEndDate().toString()).setHeader("Planned end").setAutoWidth(true);
+		grid.addColumn(c -> c.getEndedOn() == null ? "—" : c.getEndedOn().toString())
+			.setHeader("Ended on").setAutoWidth(true);
+		grid.addColumn(c -> c.getMonthlyRent().toPlainString()).setHeader("Rent").setAutoWidth(true);
+		grid.addComponentColumn(c -> statusBadge(c, today)).setHeader("Status").setAutoWidth(true);
+		grid.setItems(contracts);
+		grid.setAllRowsVisible(true);
+		section.add(grid);
 		return section;
+	}
+
+	/** Garage cell, linking through to the {@code garages/:id} detail view (drill-through both ways). */
+	private Button garageLink(Contract contract) {
+		var garage = contract.getGarage();
+		Button link = new Button(garage.getLabel(),
+			e -> UI.getCurrent().navigate("garages/" + garage.getId()));
+		link.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+		return link;
+	}
+
+	private Span statusBadge(Contract contract, LocalDate today) {
+		String label;
+		String theme;
+		if (contract.isActiveOn(today)) {
+			label = "Active";
+			theme = "badge success";
+		} else if (contract.getStartDate().isAfter(today)) {
+			label = "Upcoming";
+			theme = "badge";
+		} else {
+			label = "Ended";
+			theme = "badge contrast";
+		}
+		Span badge = new Span(label);
+		badge.getElement().getThemeList().add(theme);
+		return badge;
 	}
 }

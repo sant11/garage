@@ -1,13 +1,17 @@
 package com.example.garageops.locations;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.example.garageops.contracts.ContractService;
 import com.example.garageops.garages.Garage;
 import com.example.garageops.garages.GarageService;
 import com.example.garageops.ui.MainLayout;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -40,8 +44,10 @@ import jakarta.annotation.security.PermitAll;
  * garages will also be archived (retained, never deleted — FR-021); the problem reason is captured
  * in a plain {@link Dialog} with a {@link TextArea} (a {@code ConfirmDialog} isn't built for input).
  *
- * <p>"Rented" status is derived from S-04 contracts and is deliberately out of scope here — this
- * slice ships free/problem only. {@code @PermitAll} mirrors {@code HomeView}; the parent
+ * <p>Each garage shows a problem / rented / free status, where "rented" is derived from a current
+ * active S-04 contract (FR-005): the set of rented garage ids is computed once per refresh in a
+ * single batch query across every displayed garage, never per row. The garage label links through to
+ * its {@code garages/:id} detail view. {@code @PermitAll} mirrors {@code HomeView}; the parent
  * {@code MainLayout} is already annotated, so the whole navigation chain is owner-gated.
  */
 @Route(value = "locations", layout = MainLayout.class)
@@ -51,12 +57,19 @@ public class LocationsView extends VerticalLayout {
 
 	private final LocationService locationService;
 	private final GarageService garageService;
+	private final ContractService contractService;
 
 	private final VerticalLayout sections = new VerticalLayout();
 
-	public LocationsView(LocationService locationService, GarageService garageService) {
+	// Garage ids with a currently-active contract, recomputed once per refresh and read per row by the
+	// status badge — never a query-per-row (mirrors the single-batch discipline of listActiveByLocations).
+	private Set<Long> rentedGarageIds = Set.of();
+
+	public LocationsView(LocationService locationService, GarageService garageService,
+			ContractService contractService) {
 		this.locationService = locationService;
 		this.garageService = garageService;
+		this.contractService = contractService;
 
 		setSizeFull();
 		setPadding(true);
@@ -88,6 +101,10 @@ public class LocationsView extends VerticalLayout {
 		// Batch-load all active garages once, grouped by location id, rather than a query per section.
 		Map<Long, List<Garage>> garagesByLocation = garageService.listActiveByLocations(
 			locations.stream().map(Location::getId).toList());
+		// Derive "rented" for every displayed garage in a single batch query, read per row by the badge.
+		List<Long> allGarageIds = garagesByLocation.values().stream()
+			.flatMap(List::stream).map(Garage::getId).toList();
+		rentedGarageIds = contractService.rentedGarageIds(allGarageIds, LocalDate.now());
 		for (Location location : locations) {
 			sections.add(locationSection(location,
 				garagesByLocation.getOrDefault(location.getId(), List.of())));
@@ -111,7 +128,7 @@ public class LocationsView extends VerticalLayout {
 		head.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
 		Grid<Garage> grid = new Grid<>(Garage.class, false);
-		grid.addColumn(Garage::getLabel).setHeader("Garage").setAutoWidth(true);
+		grid.addComponentColumn(this::garageLink).setHeader("Garage").setAutoWidth(true);
 		grid.addColumn(g -> g.getMonthlyRent().toPlainString()).setHeader("Monthly rent").setAutoWidth(true);
 		grid.addComponentColumn(this::statusBadge).setHeader("Status").setAutoWidth(true);
 		grid.addComponentColumn(this::garageActions).setHeader("Actions").setAutoWidth(true);
@@ -128,13 +145,27 @@ public class LocationsView extends VerticalLayout {
 		return section;
 	}
 
+	/** Garage label cell, linking through to the {@code garages/:id} detail / rental-history view. */
+	private Button garageLink(Garage garage) {
+		Button link = new Button(garage.getLabel(),
+			e -> UI.getCurrent().navigate("garages/" + garage.getId()));
+		link.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+		return link;
+	}
+
+	/** Status badge: a problem flag wins, then a current active contract ("rented"), else "free". */
 	private Span statusBadge(Garage garage) {
-		boolean problem = garage.isProblem();
-		Span badge = new Span(problem ? "problem" : "free");
-		badge.getElement().getThemeList().add(problem ? "badge error" : "badge success");
-		if (problem && garage.getProblemReason() != null) {
-			badge.getElement().setProperty("title", garage.getProblemReason());
+		if (garage.isProblem()) {
+			Span badge = new Span("problem");
+			badge.getElement().getThemeList().add("badge error");
+			if (garage.getProblemReason() != null) {
+				badge.getElement().setProperty("title", garage.getProblemReason());
+			}
+			return badge;
 		}
+		boolean rented = rentedGarageIds.contains(garage.getId());
+		Span badge = new Span(rented ? "rented" : "free");
+		badge.getElement().getThemeList().add(rented ? "badge contrast" : "badge success");
 		return badge;
 	}
 

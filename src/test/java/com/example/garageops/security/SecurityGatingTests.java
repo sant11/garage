@@ -82,6 +82,14 @@ class SecurityGatingTests {
 	}
 
 	@Test
+	void unauthenticatedRequestToGarageDetailRedirectsToLogin() throws Exception {
+		// R5: the new S-04 garage detail route is owner-gated at introduction.
+		mockMvc.perform(get("/garages/1"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
 	void actuatorHealthIsPublic() throws Exception {
 		mockMvc.perform(get("/actuator/health"))
 			.andExpect(status().isOk());
