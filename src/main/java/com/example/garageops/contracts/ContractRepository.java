@@ -32,6 +32,16 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
 	List<Contract> findByGarageIdAndEndedOnIsNull(Long garageId);
 
 	/**
+	 * Live contracts to scan for overdue dues (S-05): non-ended <em>and</em> non-archived. Fetches
+	 * {@code garage} and {@code tenant} because the Dues view renders both labels off-session
+	 * ({@code open-in-view=false}, no read-path transaction). The portfolio scan reuses this seam for
+	 * S-06; ended/archived contracts are excluded so they never surface as currently overdue.
+	 */
+	@Query("select c from Contract c join fetch c.garage join fetch c.tenant "
+			+ "where c.endedOn is null and c.archivedAt is null")
+	List<Contract> findActiveForOverdue();
+
+	/**
 	 * Non-ended contracts across several garages in one query, to batch the portfolio "rented"
 	 * derivation (no per-row query). Dates only, so no fetch needed.
 	 */

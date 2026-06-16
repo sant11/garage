@@ -13,6 +13,7 @@ import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.locations.Location;
 import com.example.garageops.locations.LocationRepository;
+import com.example.garageops.payments.PaymentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -35,14 +36,17 @@ public class GarageService {
 	private final ObjectProvider<GarageRepository> garageRepository;
 	private final ObjectProvider<LocationRepository> locationRepository;
 	private final ObjectProvider<ContractRepository> contractRepository;
+	private final PaymentService paymentService;
 
 	public GarageService(
 			ObjectProvider<GarageRepository> garageRepository,
 			ObjectProvider<LocationRepository> locationRepository,
-			ObjectProvider<ContractRepository> contractRepository) {
+			ObjectProvider<ContractRepository> contractRepository,
+			PaymentService paymentService) {
 		this.garageRepository = garageRepository;
 		this.locationRepository = locationRepository;
 		this.contractRepository = contractRepository;
+		this.paymentService = paymentService;
 	}
 
 	/** Add a garage under a location. Rejects an archived parent location. */
@@ -77,8 +81,9 @@ public class GarageService {
 	}
 
 	/**
-	 * Archive a garage and cascade-stamp its active contracts (FR-021). Stamps the garage, then loads
-	 * its non-archived contracts and stamps each — a retain pass, never a delete.
+	 * Archive a garage and cascade-stamp its active contracts <em>and their payments</em> (FR-021).
+	 * Stamps the garage, then loads its non-archived contracts and stamps each, then cascade-archives
+	 * those contracts' payments — a retain pass, never a delete.
 	 */
 	@Transactional
 	public void archive(Long garageId) {
@@ -89,6 +94,9 @@ public class GarageService {
 		List<Contract> activeContracts = contracts().findByGarageIdAndArchivedAtIsNull(garageId);
 		activeContracts.forEach(Contract::archive);
 		contracts().saveAll(activeContracts);
+
+		paymentService.archivePaymentsForContracts(
+			activeContracts.stream().map(Contract::getId).toList());
 	}
 
 	/**

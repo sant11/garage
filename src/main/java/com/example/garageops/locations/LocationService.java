@@ -10,6 +10,7 @@ import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.garages.Garage;
 import com.example.garageops.garages.GarageRepository;
+import com.example.garageops.payments.PaymentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -33,14 +34,17 @@ public class LocationService {
 	private final ObjectProvider<LocationRepository> locationRepository;
 	private final ObjectProvider<GarageRepository> garageRepository;
 	private final ObjectProvider<ContractRepository> contractRepository;
+	private final PaymentService paymentService;
 
 	public LocationService(
 			ObjectProvider<LocationRepository> locationRepository,
 			ObjectProvider<GarageRepository> garageRepository,
-			ObjectProvider<ContractRepository> contractRepository) {
+			ObjectProvider<ContractRepository> contractRepository,
+			PaymentService paymentService) {
 		this.locationRepository = locationRepository;
 		this.garageRepository = garageRepository;
 		this.contractRepository = contractRepository;
+		this.paymentService = paymentService;
 	}
 
 	/** Add a new location. */
@@ -61,10 +65,11 @@ public class LocationService {
 	}
 
 	/**
-	 * Archive a location and cascade-stamp its active garages <em>and their contracts</em> (FR-021).
-	 * Loads the location, stamps it, stamps its active garages, then stamps those garages' active
-	 * contracts in one batch query — a retain pass, never a delete. {@code archive()} is idempotent,
-	 * so a re-run leaves existing archive moments intact.
+	 * Archive a location and cascade-stamp its active garages, <em>their contracts, and those
+	 * contracts' payments</em> (FR-021). Loads the location, stamps it, stamps its active garages, then
+	 * stamps those garages' active contracts in one batch query, then cascade-archives those contracts'
+	 * payments — a retain pass, never a delete. {@code archive()} is idempotent, so a re-run leaves
+	 * existing archive moments intact.
 	 */
 	@Transactional
 	public void archive(Long locationId) {
@@ -81,6 +86,9 @@ public class LocationService {
 			List<Contract> activeContracts = contracts().findNonArchivedByGarageIdIn(garageIds);
 			activeContracts.forEach(Contract::archive);
 			contracts().saveAll(activeContracts);
+
+			paymentService.archivePaymentsForContracts(
+				activeContracts.stream().map(Contract::getId).toList());
 		}
 	}
 

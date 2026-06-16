@@ -55,6 +55,16 @@ public class OverdueRule {
 		return new OverdueResult(period, overdue, amountDue, daysOverdue);
 	}
 
+	/**
+	 * The "latest fully-due period" for one contract as of {@code asOf}, interpreted in {@code zone} —
+	 * the same period {@link #evaluate} reasons about. Exposed so a caller (the Phase 3
+	 * {@code OverdueService}) can resolve the period <em>before</em> it knows the paid-sum, in order to
+	 * bound the aggregation query, while the period logic stays in this one pure unit.
+	 */
+	public YearMonth latestFullyDuePeriod(int paymentDayOfMonth, int graceDays, Instant asOf, ZoneId zone) {
+		return latestFullyDuePeriod(asOf.atZone(zone).toLocalDate(), paymentDayOfMonth, graceDays);
+	}
+
 	/** The most recent month whose due date is strictly before {@code asOfDate}. */
 	private YearMonth latestFullyDuePeriod(LocalDate asOfDate, int paymentDayOfMonth, int graceDays) {
 		YearMonth month = YearMonth.from(asOfDate);

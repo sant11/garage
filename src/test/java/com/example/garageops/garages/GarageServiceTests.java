@@ -23,6 +23,7 @@ import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.locations.Location;
 import com.example.garageops.locations.LocationRepository;
+import com.example.garageops.payments.PaymentService;
 import com.example.garageops.tenants.Tenant;
 
 /**
@@ -37,8 +38,10 @@ class GarageServiceTests {
 	private final GarageRepository garageRepository = mock(GarageRepository.class);
 	private final LocationRepository locationRepository = mock(LocationRepository.class);
 	private final ContractRepository contractRepository = mock(ContractRepository.class);
+	private final PaymentService paymentService = mock(PaymentService.class);
 	private final GarageService service = new GarageService(
-		providerOf(garageRepository), providerOf(locationRepository), providerOf(contractRepository));
+		providerOf(garageRepository), providerOf(locationRepository), providerOf(contractRepository),
+		paymentService);
 
 	// Wrap a mock repository in a mocked ObjectProvider, mirroring the production ObjectProvider
 	// wiring exercised by account/OwnerBootstrapTests.
@@ -118,6 +121,9 @@ class GarageServiceTests {
 		assertThat(contract.isArchived()).isTrue();
 		verify(garageRepository).save(garage);
 		verify(contractRepository).saveAll(List.of(contract));
+
+		// The cascade reaches the payment side too, so a garage's payments are retain-stamped.
+		verify(paymentService).archivePaymentsForContracts(any());
 
 		// R4: no delete reaches either repository.
 		verify(garageRepository, never()).delete(any());

@@ -22,6 +22,7 @@ import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.garages.Garage;
 import com.example.garageops.locations.Location;
+import com.example.garageops.payments.PaymentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -37,8 +38,9 @@ class TenantServiceTests {
 
 	private final TenantRepository tenantRepository = mock(TenantRepository.class);
 	private final ContractRepository contractRepository = mock(ContractRepository.class);
-	private final TenantService service =
-		new TenantService(providerOf(tenantRepository), providerOf(contractRepository));
+	private final PaymentService paymentService = mock(PaymentService.class);
+	private final TenantService service = new TenantService(
+		providerOf(tenantRepository), providerOf(contractRepository), paymentService);
 
 	// Wrap a mock repository in a mocked ObjectProvider, mirroring the production ObjectProvider
 	// wiring exercised by locations/LocationServiceTests.
@@ -115,6 +117,9 @@ class TenantServiceTests {
 		assertThat(contract.isArchived()).isTrue();
 		verify(tenantRepository).save(tenant);
 		verify(contractRepository).saveAll(List.of(contract));
+
+		// The cascade reaches the payment side too, so the tenant's payments are retain-stamped.
+		verify(paymentService).archivePaymentsForContracts(any());
 
 		// R4: no delete reaches either repository.
 		verify(tenantRepository, never()).delete(any());

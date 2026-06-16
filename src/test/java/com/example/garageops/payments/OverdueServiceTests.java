@@ -1,0 +1,170 @@
+package com.example.garageops.payments;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
+
+import com.example.garageops.contracts.Contract;
+import com.example.garageops.contracts.ContractRepository;
+import com.example.garageops.garages.Garage;
+import com.example.garageops.payments.PaymentRepository.ContractPaidSum;
+import com.example.garageops.tenants.Tenant;
+
+/**
+ * Verifies {@link OverdueService} joins the batch paid-sum aggregation to the pure {@link OverdueRule}
+ * and projects only overdue contracts to {@link OverdueRow} — mocked repositories, a fixed
+ * {@link Clock}, no Spring context. The clock is pinned to Warsaw on 2026-06-20, past the 15th-of-June
+ * due date for the fixture (rent 250, day 10, grace 5), so June is the resolved period.
+ *
+ * <p>This is the end-to-end service oracle for the plan's partial→full trace (manual step 3.4): a
+ * partial payment leaves the contract overdue for the remainder; the full amount drops it off Dues.
+ */
+class OverdueServiceTests {
+
+	private static final BigDecimal RENT = new BigDecimal("250.00");
+	private static final int DAY = 10;
+	private static final int GRACE = 5;
+	private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
+
+	private final Clock clock = Clock.fixed(Instant.parse("2026-06-20T10:00:00Z"), WARSAW);
+	private final PaymentRepository paymentRepository = mock(PaymentRepository.class);
+	private final ContractRepository contractRepository = mock(ContractRepository.class);
+	private final OverdueService service =
+		new OverdueService(clock, providerOf(paymentRepository), providerOf(contractRepository));
+
+	@SuppressWarnings("unchecked")
+	private static <T> ObjectProvider<T> providerOf(T bean) {
+		ObjectProvider<T> provider = mock(ObjectProvider.class);
+		given(provider.getObject()).willReturn(bean);
+		return provider;
+	}
+
+	@Test
+	void reportsAnUnpaidContractAsOverdueWithAmountAndDays() {
+		Contract contract = contract(1L, "A-1", "Acme Co");
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(contract));
+		// No payment row for the contract → treated as paid-zero by the rule.
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of());
+
+		List<OverdueRow> dues = service.currentDues();
+
+		assertThat(dues).singleElement().satisfies(row -> {
+			assertThat(row.contractId()).isEqualTo(1L);
+			assertThat(row.garageLabel()).isEqualTo("A-1");
+			assertThat(row.tenantName()).isEqualTo("Acme Co");
+			assertThat(row.amountDue()).isEqualByComparingTo(RENT);
+			assertThat(row.daysOverdue()).isEqualTo(5L); // 06-15 → 06-20
+		});
+		// One aggregation query bounded to the resolved June period.
+		verify(paymentRepository).sumPaidByContractIdInPeriod(
+			List.of(1L), LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+	}
+
+	@Test
+	void aPartialPaymentLeavesTheContractOverdueForTheRemainder() {
+		Contract contract = contract(1L, "A-1", "Acme Co");
+		ContractPaidSum partial = paidSum(1L, new BigDecimal("100.00"));
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(contract));
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of(partial));
+
+		List<OverdueRow> dues = service.currentDues();
+
+		assertThat(dues).singleElement().satisfies(row ->
+			assertThat(row.amountDue()).isEqualByComparingTo("150.00"));
+	}
+
+	@Test
+	void aFullyPaidContractDropsOffDues() {
+		Contract contract = contract(1L, "A-1", "Acme Co");
+		ContractPaidSum full = paidSum(1L, RENT);
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(contract));
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of(full));
+
+		assertThat(service.currentDues()).isEmpty();
+	}
+
+	@Test
+	void returnsOnlyTheOverdueContractsFromAMixedPortfolio() {
+		Contract paid = contract(1L, "A-1", "Acme Co");
+		Contract unpaid = contract(2L, "A-2", "Beta Ltd");
+		ContractPaidSum paidInFull = paidSum(1L, RENT);
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(paid, unpaid));
+		// Contract 1 paid in full; contract 2 unpaid.
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of(paidInFull));
+
+		List<OverdueRow> dues = service.currentDues();
+
+		assertThat(dues).singleElement().satisfies(row -> {
+			assertThat(row.contractId()).isEqualTo(2L);
+			assertThat(row.amountDue()).isEqualByComparingTo(RENT);
+		});
+	}
+
+	@Test
+	void anEmptyPortfolioReturnsEmptyWithoutQueryingPayments() {
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of());
+
+		assertThat(service.currentDues()).isEmpty();
+		verify(paymentRepository, never()).sumPaidByContractIdInPeriod(any(), any(), any());
+	}
+
+	@Test
+	void duesAsOfHonorsAnExplicitInstantForTheReDerivationSeam() {
+		// Earlier than the June due date: June is not yet due, so May is the resolved period — proving
+		// asOf (not the clock's now) drives the period. May unpaid → overdue for May.
+		Contract contract = contract(1L, "A-1", "Acme Co");
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(contract));
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of());
+
+		List<OverdueRow> dues = service.duesAsOf(Instant.parse("2026-06-10T10:00:00Z"));
+
+		assertThat(dues).singleElement().satisfies(row ->
+			assertThat(row.amountDue()).isEqualByComparingTo(RENT));
+		// The query is bounded to May, confirming the explicit instant resolved the prior period.
+		verify(paymentRepository).sumPaidByContractIdInPeriod(
+			List.of(1L), LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 31));
+	}
+
+	// A mocked Contract so its surrogate id is controllable (a DB-free entity has no id) and the rule
+	// inputs are explicit; the service reads only these getters off it.
+	private static Contract contract(long id, String garageLabel, String tenantName) {
+		Contract contract = mock(Contract.class);
+		given(contract.getId()).willReturn(id);
+		given(contract.getMonthlyRent()).willReturn(RENT);
+		given(contract.getPaymentDayOfMonth()).willReturn(DAY);
+		given(contract.getGraceDays()).willReturn(GRACE);
+		Garage garage = mock(Garage.class);
+		given(garage.getLabel()).willReturn(garageLabel);
+		given(contract.getGarage()).willReturn(garage);
+		Tenant tenant = mock(Tenant.class);
+		given(tenant.getName()).willReturn(tenantName);
+		given(contract.getTenant()).willReturn(tenant);
+		return contract;
+	}
+
+	private static ContractPaidSum paidSum(long contractId, BigDecimal sum) {
+		ContractPaidSum row = mock(ContractPaidSum.class);
+		given(row.getContractId()).willReturn(contractId);
+		given(row.getPaidSum()).willReturn(sum);
+		return row;
+	}
+}

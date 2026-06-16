@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractRepository;
+import com.example.garageops.payments.PaymentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -31,12 +32,15 @@ public class TenantService {
 
 	private final ObjectProvider<TenantRepository> tenantRepository;
 	private final ObjectProvider<ContractRepository> contractRepository;
+	private final PaymentService paymentService;
 
 	public TenantService(
 			ObjectProvider<TenantRepository> tenantRepository,
-			ObjectProvider<ContractRepository> contractRepository) {
+			ObjectProvider<ContractRepository> contractRepository,
+			PaymentService paymentService) {
 		this.tenantRepository = tenantRepository;
 		this.contractRepository = contractRepository;
+		this.paymentService = paymentService;
 	}
 
 	/** Add a new tenant. */
@@ -70,9 +74,10 @@ public class TenantService {
 	}
 
 	/**
-	 * Archive a tenant and cascade-stamp its active contracts (FR-021). Loads the tenant, stamps it,
-	 * then loads its non-archived contracts and stamps each — a retain pass, never a delete.
-	 * {@code archive()} is idempotent, so a re-run leaves existing archive moments intact.
+	 * Archive a tenant and cascade-stamp its active contracts <em>and their payments</em> (FR-021).
+	 * Loads the tenant, stamps it, then loads its non-archived contracts and stamps each, then
+	 * cascade-archives those contracts' payments — a retain pass, never a delete. {@code archive()} is
+	 * idempotent, so a re-run leaves existing archive moments intact.
 	 */
 	@Transactional
 	public void archive(Long id) {
@@ -83,6 +88,9 @@ public class TenantService {
 		List<Contract> activeContracts = contracts().findByTenantIdAndArchivedAtIsNull(id);
 		activeContracts.forEach(Contract::archive);
 		contracts().saveAll(activeContracts);
+
+		paymentService.archivePaymentsForContracts(
+			activeContracts.stream().map(Contract::getId).toList());
 	}
 
 	private Tenant require(Long id) {

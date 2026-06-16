@@ -303,26 +303,26 @@ The Dues / portfolio scan must use the **single batch `SUM ... GROUP BY` over `c
 
 #### Automated
 
-- [x] 2.1 Compiles (`mvnw.cmd test-compile`)
-- [x] 2.2 Schema validates + migration applies (`mvnw.cmd verify`)
-- [x] 2.3 Entity unit tests pass (`mvnw.cmd test -Dtest=PaymentTests`)
+- [x] 2.1 Compiles (`mvnw.cmd test-compile`) — 838616e
+- [x] 2.2 Schema validates + migration applies (`mvnw.cmd verify`) — 838616e
+- [x] 2.3 Entity unit tests pass (`mvnw.cmd test -Dtest=PaymentTests`) — 838616e
 
 #### Manual
 
-- [x] 2.4 App boots, V7 applies cleanly
-- [x] 2.5 Existing contracts show grace_days = 5
+- [x] 2.4 App boots, V7 applies cleanly — 838616e
+- [x] 2.5 Existing contracts show grace_days = 5 — 838616e
 
 ### Phase 3: Payment & overdue services
 
 #### Automated
 
-- [ ] 3.1 Compiles (`mvnw.cmd test-compile`)
-- [ ] 3.2 Service unit tests pass (`PaymentServiceTests`, `OverdueServiceTests`)
-- [ ] 3.3 Full build green (`mvnw.cmd verify`)
+- [x] 3.1 Compiles (`mvnw.cmd test-compile`)
+- [x] 3.2 Service unit tests pass (`PaymentServiceTests`, `OverdueServiceTests`)
+- [x] 3.3 Full build green (`mvnw.cmd verify`)
 
 #### Manual
 
-- [ ] 3.4 End-to-end partial→full payment flips overdue correctly
+- [x] 3.4 End-to-end partial→full payment flips overdue correctly
 
 ### Phase 4: Views & navigation
 

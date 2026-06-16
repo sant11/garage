@@ -27,6 +27,14 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	/** A contract's payment history, newest first (FR-014); payment fields only, no fetch needed. */
 	List<Payment> findByContractIdOrderByDateDesc(Long contractId);
 
+	/**
+	 * Non-archived payments across several contracts — the contract-archive cascade loops these to
+	 * stamp them (FR-021 retain-on-archive), so payments on an archived contract are retained yet no
+	 * longer count toward a live overdue sum. Batched over the contract ids so a multi-contract
+	 * archive (garage / tenant / location) stamps in one query rather than one per contract.
+	 */
+	List<Payment> findByContractIdInAndArchivedAtIsNull(List<Long> contractIds);
+
 	/** A tenant's payment history, newest first (FR-014); fetches the garage for the label column. */
 	@Query("select p from Payment p join fetch p.contract c join fetch c.garage "
 			+ "where c.tenant.id = :tenantId order by p.date desc")
