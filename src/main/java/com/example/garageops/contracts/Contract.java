@@ -64,6 +64,16 @@ public class Contract extends ArchivableEntity {
 	@Column(name = "payment_day_of_month", nullable = false)
 	private int paymentDayOfMonth;
 
+	/**
+	 * Days of grace added to {@code paymentDayOfMonth} before a period counts as overdue (FR-013).
+	 * A per-contract historical fact — changing one contract never reclassifies another's past
+	 * periods — defaulted to 5 at both the entity and DB level (S-05). The overdue engine reads this
+	 * per contract; it is not yet owner-editable, so every contract carries the default for now.
+	 */
+	@Min(0)
+	@Column(name = "grace_days", nullable = false)
+	private int graceDays = 5;
+
 	@Column(name = "ended_on")
 	private LocalDate endedOn;
 
@@ -144,6 +154,11 @@ public class Contract extends ArchivableEntity {
 
 	public int getPaymentDayOfMonth() {
 		return paymentDayOfMonth;
+	}
+
+	/** @return the per-contract grace days (FR-013); defaults to 5. */
+	public int getGraceDays() {
+		return graceDays;
 	}
 
 	public LocalDate getEndedOn() {

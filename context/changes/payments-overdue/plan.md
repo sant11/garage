@@ -291,26 +291,26 @@ The Dues / portfolio scan must use the **single batch `SUM ... GROUP BY` over `c
 
 #### Automated
 
-- [x] 1.1 Module compiles (`mvnw.cmd test-compile`)
-- [x] 1.2 Pure-unit tests pass (`mvnw.cmd test -Dtest=OverdueRuleTests`)
-- [x] 1.3 Tests cover R1, R2, R3, and not-yet-due
+- [x] 1.1 Module compiles (`mvnw.cmd test-compile`) — bcbab79
+- [x] 1.2 Pure-unit tests pass (`mvnw.cmd test -Dtest=OverdueRuleTests`) — bcbab79
+- [x] 1.3 Tests cover R1, R2, R3, and not-yet-due — bcbab79
 
 #### Manual
 
-- [x] 1.4 Hand-computed example spot-check
+- [x] 1.4 Hand-computed example spot-check — bcbab79
 
 ### Phase 2: Payment data model & migration
 
 #### Automated
 
-- [ ] 2.1 Compiles (`mvnw.cmd test-compile`)
-- [ ] 2.2 Schema validates + migration applies (`mvnw.cmd verify`)
-- [ ] 2.3 Entity unit tests pass (`mvnw.cmd test -Dtest=PaymentTests`)
+- [x] 2.1 Compiles (`mvnw.cmd test-compile`)
+- [x] 2.2 Schema validates + migration applies (`mvnw.cmd verify`)
+- [x] 2.3 Entity unit tests pass (`mvnw.cmd test -Dtest=PaymentTests`)
 
 #### Manual
 
-- [ ] 2.4 App boots, V7 applies cleanly
-- [ ] 2.5 Existing contracts show grace_days = 5
+- [x] 2.4 App boots, V7 applies cleanly
+- [x] 2.5 Existing contracts show grace_days = 5
 
 ### Phase 3: Payment & overdue services
 
