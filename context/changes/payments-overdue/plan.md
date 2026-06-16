@@ -328,12 +328,12 @@ The Dues / portfolio scan must use the **single batch `SUM ... GROUP BY` over `c
 
 #### Automated
 
-- [x] 4.1 Compiles and full build green (`mvnw.cmd verify`)
-- [x] 4.2 Existing smoke/security tests still pass
+- [x] 4.1 Compiles and full build green (`mvnw.cmd verify`) — a11022d
+- [x] 4.2 Existing smoke/security tests still pass — a11022d
 
 #### Manual
 
-- [x] 4.3 Partial payment → garage appears in Dues with correct amount/days
-- [x] 4.4 Full payment → garage drops off Dues; payment in contract + tenant history
-- [x] 4.5 Empty states render friendly copy
-- [x] 4.6 Archiving a contract retains payments and removes from active dues
+- [x] 4.3 Partial payment → garage appears in Dues with correct amount/days — a11022d
+- [x] 4.4 Full payment → garage drops off Dues; payment in contract + tenant history — a11022d
+- [x] 4.5 Empty states render friendly copy — a11022d
+- [x] 4.6 Archiving a contract retains payments and removes from active dues — a11022d

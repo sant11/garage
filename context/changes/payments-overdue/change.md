@@ -1,7 +1,7 @@
 ---
 change_id: payments-overdue
 title: Payments overdue
-status: implementing
+status: implemented
 created: 2026-06-11
 updated: 2026-06-16
 archived_at: null
