@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractService;
+import com.example.garageops.payments.Payment;
+import com.example.garageops.payments.PaymentService;
 import com.example.garageops.tenants.Tenant;
 import com.example.garageops.tenants.TenantService;
 import com.example.garageops.ui.MainLayout;
@@ -25,6 +27,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.NotFoundException;
@@ -60,14 +63,16 @@ public class GarageDetailView extends VerticalLayout implements HasUrlParameter<
 	private final GarageService garageService;
 	private final ContractService contractService;
 	private final TenantService tenantService;
+	private final PaymentService paymentService;
 
 	private Garage garage;
 
 	public GarageDetailView(GarageService garageService, ContractService contractService,
-			TenantService tenantService) {
+			TenantService tenantService, PaymentService paymentService) {
 		this.garageService = garageService;
 		this.contractService = contractService;
 		this.tenantService = tenantService;
+		this.paymentService = paymentService;
 
 		setSizeFull();
 		setPadding(true);
@@ -164,6 +169,10 @@ public class GarageDetailView extends VerticalLayout implements HasUrlParameter<
 	private HorizontalLayout contractActions(Contract contract, LocalDate today) {
 		HorizontalLayout layout = new HorizontalLayout();
 		layout.setPadding(false);
+		// Payments apply to any non-archived contract — including an ended one, which can still take a
+		// late settling payment; the service rejects an archived contract.
+		layout.add(new Button("Record payment", e -> openRecordPaymentDialog(contract)));
+		layout.add(new Button("Payments", e -> openPaymentsDialog(contract)));
 		// "End early" only applies to a currently-active contract: an upcoming one hasn't started and
 		// an ended/expired one can't take an actual-end date inside its window.
 		if (contract.isActiveOn(today)) {
@@ -233,6 +242,81 @@ public class GarageDetailView extends VerticalLayout implements HasUrlParameter<
 
 		dialog.add(new VerticalLayout(tenant, start, plannedEnd, rent, paymentDay, error));
 		dialog.getFooter().add(cancel, save);
+		dialog.open();
+	}
+
+	/** Record a rent payment against the in-context contract (FR-012), reusing the new-contract dialog
+	 * precedent: manual validation, the service's {@link IllegalStateException} shown inline without
+	 * closing the dialog, success → {@code close()} + {@code refresh()}. */
+	private void openRecordPaymentDialog(Contract contract) {
+		Dialog dialog = new Dialog("Record payment");
+
+		BigDecimalField amount = new BigDecimalField("Amount");
+		amount.setWidthFull();
+
+		DatePicker date = new DatePicker("Payment date");
+		date.setValue(LocalDate.now());
+		date.setWidthFull();
+
+		TextField note = new TextField("Note (optional)");
+		note.setWidthFull();
+
+		Paragraph error = new Paragraph();
+		error.getStyle().set("color", "var(--lumo-error-text-color)");
+		error.setVisible(false);
+
+		Button save = new Button("Record", e -> {
+			error.setVisible(false);
+			BigDecimal amountValue = amount.getValue();
+			if (amountValue == null || amountValue.signum() <= 0) {
+				amount.setInvalid(true);
+				amount.setErrorMessage("Amount must be greater than zero");
+				return;
+			}
+			if (date.getValue() == null) {
+				date.setInvalid(true);
+				date.setErrorMessage("A payment date is required");
+				return;
+			}
+			try {
+				paymentService.record(contract.getId(), amountValue, date.getValue(), note.getValue());
+			} catch (IllegalStateException ex) {
+				// Validation rejection (e.g. archived contract): surface it and keep the dialog open.
+				error.setText(ex.getMessage());
+				error.setVisible(true);
+				return;
+			}
+			dialog.close();
+			refresh();
+		});
+		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		Button cancel = new Button("Cancel", e -> dialog.close());
+
+		dialog.add(new VerticalLayout(amount, date, note, error));
+		dialog.getFooter().add(cancel, save);
+		dialog.open();
+	}
+
+	/** The in-context contract's recorded payments (FR-014), newest first; friendly empty-state when
+	 * none. Read-only, so it opens in a dialog rather than mutating the page. */
+	private void openPaymentsDialog(Contract contract) {
+		Dialog dialog = new Dialog("Payments");
+
+		List<Payment> payments = paymentService.historyForContract(contract.getId());
+		if (payments.isEmpty()) {
+			dialog.add(new Paragraph("No payments recorded yet."));
+		} else {
+			Grid<Payment> grid = new Grid<>(Payment.class, false);
+			grid.addColumn(p -> p.getDate().toString()).setHeader("Date").setAutoWidth(true);
+			grid.addColumn(p -> p.getAmount().toPlainString()).setHeader("Amount").setAutoWidth(true);
+			grid.addColumn(p -> p.getNote() == null ? "—" : p.getNote()).setHeader("Note").setAutoWidth(true);
+			grid.setItems(payments);
+			grid.setAllRowsVisible(true);
+			dialog.add(grid);
+		}
+
+		Button close = new Button("Close", e -> dialog.close());
+		dialog.getFooter().add(close);
 		dialog.open();
 	}
 

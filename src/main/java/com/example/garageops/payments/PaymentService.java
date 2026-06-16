@@ -81,6 +81,24 @@ public class PaymentService {
 		payments().saveAll(activePayments);
 	}
 
+	/**
+	 * @return a contract's payment history, newest first (FR-014) — the per-contract history surface.
+	 *         Renders only the payment's own fields (the contract is already in view context), so no
+	 *         fetch is needed. Includes archived payments, which stay visible per FR-021.
+	 */
+	public List<Payment> historyForContract(Long contractId) {
+		return payments().findByContractIdOrderByDateDesc(contractId);
+	}
+
+	/**
+	 * @return a tenant's payment history across all their contracts, newest first (FR-014). The
+	 *         repository {@code JOIN FETCH}es the garage so the off-session label column renders under
+	 *         {@code open-in-view=false}. Includes archived payments, which stay visible per FR-021.
+	 */
+	public List<Payment> historyForTenant(Long tenantId) {
+		return payments().findByTenantIdOrderByDateDesc(tenantId);
+	}
+
 	private Contract requireContract(Long id) {
 		return contracts().findById(id)
 			.orElseThrow(() -> new EntityNotFoundException("Unknown contract: " + id));

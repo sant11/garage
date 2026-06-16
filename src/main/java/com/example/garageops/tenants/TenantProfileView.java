@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractService;
+import com.example.garageops.payments.Payment;
+import com.example.garageops.payments.PaymentService;
 import com.example.garageops.ui.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -50,10 +52,13 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 
 	private final TenantService tenantService;
 	private final ContractService contractService;
+	private final PaymentService paymentService;
 
-	public TenantProfileView(TenantService tenantService, ContractService contractService) {
+	public TenantProfileView(TenantService tenantService, ContractService contractService,
+			PaymentService paymentService) {
 		this.tenantService = tenantService;
 		this.contractService = contractService;
+		this.paymentService = paymentService;
 
 		setSizeFull();
 		setPadding(true);
@@ -91,6 +96,7 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 			add(new Paragraph(tenant.getContactInfo()));
 		}
 		add(contractsSection(tenant));
+		add(paymentsSection(tenant));
 	}
 
 	/**
@@ -122,6 +128,43 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 		grid.setAllRowsVisible(true);
 		section.add(grid);
 		return section;
+	}
+
+	/**
+	 * The tenant's recorded payments across all their contracts (FR-014), newest first, each row
+	 * linking through to the garage it was paid against. Friendly empty-state when there are none.
+	 */
+	private Component paymentsSection(Tenant tenant) {
+		VerticalLayout section = new VerticalLayout();
+		section.setPadding(false);
+		section.setSpacing(true);
+		section.add(new H3("Payments"));
+
+		List<Payment> payments = paymentService.historyForTenant(tenant.getId());
+		if (payments.isEmpty()) {
+			section.add(new Paragraph("No payments recorded yet."));
+			return section;
+		}
+
+		Grid<Payment> grid = new Grid<>(Payment.class, false);
+		grid.addComponentColumn(this::paymentGarageLink).setHeader("Garage").setAutoWidth(true);
+		grid.addColumn(p -> p.getDate().toString()).setHeader("Date").setAutoWidth(true);
+		grid.addColumn(p -> p.getAmount().toPlainString()).setHeader("Amount").setAutoWidth(true);
+		grid.addColumn(p -> p.getNote() == null ? "—" : p.getNote()).setHeader("Note").setAutoWidth(true);
+		grid.setItems(payments);
+		grid.setAllRowsVisible(true);
+		section.add(grid);
+		return section;
+	}
+
+	/** Garage cell of a payment row — the repository {@code JOIN FETCH}es the garage, so this is safe
+	 * off-session; links through to the {@code garages/:id} detail view. */
+	private Button paymentGarageLink(Payment payment) {
+		var garage = payment.getContract().getGarage();
+		Button link = new Button(garage.getLabel(),
+			e -> UI.getCurrent().navigate("garages/" + garage.getId()));
+		link.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+		return link;
 	}
 
 	/** Garage cell, linking through to the {@code garages/:id} detail view (drill-through both ways). */

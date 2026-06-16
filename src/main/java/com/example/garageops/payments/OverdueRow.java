@@ -8,12 +8,13 @@ import java.math.BigDecimal;
  * tenant name as already-resolved {@code String}s rather than the lazy entities, so it crosses the
  * view boundary freely under {@code open-in-view=false}.
  *
- * @param contractId  the overdue contract, so the view can drill through to its garage
+ * @param contractId  the overdue contract
+ * @param garageId    the contract's garage, so the Dues view can drill through to {@code garages/:id}
  * @param garageLabel the garage's display label
  * @param tenantName  the renting tenant's name
  * @param amountDue   {@code monthlyRent − paidInPeriod} for the resolved period, never negative
  * @param daysOverdue whole days the resolved period is past its due date
  */
-public record OverdueRow(Long contractId, String garageLabel, String tenantName,
+public record OverdueRow(Long contractId, Long garageId, String garageLabel, String tenantName,
 		BigDecimal amountDue, long daysOverdue) {
 }

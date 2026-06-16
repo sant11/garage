@@ -316,24 +316,24 @@ The Dues / portfolio scan must use the **single batch `SUM ... GROUP BY` over `c
 
 #### Automated
 
-- [x] 3.1 Compiles (`mvnw.cmd test-compile`)
-- [x] 3.2 Service unit tests pass (`PaymentServiceTests`, `OverdueServiceTests`)
-- [x] 3.3 Full build green (`mvnw.cmd verify`)
+- [x] 3.1 Compiles (`mvnw.cmd test-compile`) — 6894861
+- [x] 3.2 Service unit tests pass (`PaymentServiceTests`, `OverdueServiceTests`) — 6894861
+- [x] 3.3 Full build green (`mvnw.cmd verify`) — 6894861
 
 #### Manual
 
-- [x] 3.4 End-to-end partial→full payment flips overdue correctly
+- [x] 3.4 End-to-end partial→full payment flips overdue correctly — 6894861
 
 ### Phase 4: Views & navigation
 
 #### Automated
 
-- [ ] 4.1 Compiles and full build green (`mvnw.cmd verify`)
-- [ ] 4.2 Existing smoke/security tests still pass
+- [x] 4.1 Compiles and full build green (`mvnw.cmd verify`)
+- [x] 4.2 Existing smoke/security tests still pass
 
 #### Manual
 
-- [ ] 4.3 Partial payment → garage appears in Dues with correct amount/days
-- [ ] 4.4 Full payment → garage drops off Dues; payment in contract + tenant history
-- [ ] 4.5 Empty states render friendly copy
-- [ ] 4.6 Archiving a contract retains payments and removes from active dues
+- [x] 4.3 Partial payment → garage appears in Dues with correct amount/days
+- [x] 4.4 Full payment → garage drops off Dues; payment in contract + tenant history
+- [x] 4.5 Empty states render friendly copy
+- [x] 4.6 Archiving a contract retains payments and removes from active dues

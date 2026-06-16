@@ -76,8 +76,9 @@ public class OverdueService {
 			OverdueResult result = rule.evaluate(contract.getMonthlyRent(), contract.getPaymentDayOfMonth(),
 				contract.getGraceDays(), paidByContract.get(contract.getId()), asOf, clock.getZone());
 			if (result.overdue()) {
-				dues.add(new OverdueRow(contract.getId(), contract.getGarage().getLabel(),
-					contract.getTenant().getName(), result.amountDue(), result.daysOverdue()));
+				dues.add(new OverdueRow(contract.getId(), contract.getGarage().getId(),
+					contract.getGarage().getLabel(), contract.getTenant().getName(),
+					result.amountDue(), result.daysOverdue()));
 			}
 		}
 		return dues;

@@ -90,6 +90,14 @@ class SecurityGatingTests {
 	}
 
 	@Test
+	void unauthenticatedRequestToDuesRedirectsToLogin() throws Exception {
+		// R5: the new S-05 dues route is owner-gated at introduction.
+		mockMvc.perform(get("/dues"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
 	void actuatorHealthIsPublic() throws Exception {
 		mockMvc.perform(get("/actuator/health"))
 			.andExpect(status().isOk());
