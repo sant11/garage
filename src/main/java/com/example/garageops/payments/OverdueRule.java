@@ -1,6 +1,7 @@
 package com.example.garageops.payments;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -46,7 +47,7 @@ public class OverdueRule {
 		YearMonth period = latestFullyDuePeriod(asOfDate, paymentDayOfMonth, graceDays);
 
 		BigDecimal paid = paidInPeriod == null ? BigDecimal.ZERO : paidInPeriod;
-		BigDecimal amountDue = monthlyRent.subtract(paid).max(BigDecimal.ZERO);
+		BigDecimal amountDue = monthlyRent.subtract(paid).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
 		boolean overdue = amountDue.signum() > 0;
 		long daysOverdue = overdue
 				? ChronoUnit.DAYS.between(dueDate(period, paymentDayOfMonth, graceDays), asOfDate)

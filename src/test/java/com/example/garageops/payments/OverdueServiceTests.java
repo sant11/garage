@@ -38,6 +38,9 @@ class OverdueServiceTests {
 	private static final BigDecimal RENT = new BigDecimal("250.00");
 	private static final int DAY = 10;
 	private static final int GRACE = 5;
+	// Started well before the earliest asOf the tests evaluate (2026-06-10), so the future-start
+	// guard in OverdueService keeps every fixture contract in scope.
+	private static final LocalDate START = LocalDate.of(2026, 1, 1);
 	private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
 
 	private final Clock clock = Clock.fixed(Instant.parse("2026-06-20T10:00:00Z"), WARSAW);
@@ -127,6 +130,30 @@ class OverdueServiceTests {
 	}
 
 	@Test
+	void aFutureStartContractIsExcludedEvenWhenUnpaid() {
+		// Regression for the F1 future-start bug: a contract whose term begins after the evaluation
+		// date owes nothing yet, so it must never surface on Dues — even though it is active
+		// (endedOn null) and has no payment. A normal already-started contract is kept alongside it,
+		// proving the guard excludes selectively rather than emptying the result.
+		Contract started = contract(1L, "A-1", "Acme Co");
+		Contract future = contract(2L, "A-2", "Beta Ltd", LocalDate.of(2026, 7, 1)); // after clock's 2026-06-20
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(started, future));
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of());
+
+		List<OverdueRow> dues = service.currentDues();
+
+		assertThat(dues).singleElement().satisfies(row -> {
+			assertThat(row.contractId()).isEqualTo(1L);
+			assertThat(row.amountDue()).isEqualByComparingTo(RENT);
+		});
+		// The future-start contract is filtered out before the period aggregation, so only the
+		// started contract's id reaches the paid-sum query.
+		verify(paymentRepository).sumPaidByContractIdInPeriod(
+			List.of(1L), LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+	}
+
+	@Test
 	void duesAsOfHonorsAnExplicitInstantForTheReDerivationSeam() {
 		// Earlier than the June due date: June is not yet due, so May is the resolved period — proving
 		// asOf (not the clock's now) drives the period. May unpaid → overdue for May.
@@ -145,13 +172,19 @@ class OverdueServiceTests {
 	}
 
 	// A mocked Contract so its surrogate id is controllable (a DB-free entity has no id) and the rule
-	// inputs are explicit; the service reads only these getters off it.
+	// inputs are explicit; the service reads only these getters off it. Started at START (well before
+	// any asOf under test).
 	private static Contract contract(long id, String garageLabel, String tenantName) {
+		return contract(id, garageLabel, tenantName, START);
+	}
+
+	private static Contract contract(long id, String garageLabel, String tenantName, LocalDate startDate) {
 		Contract contract = mock(Contract.class);
 		given(contract.getId()).willReturn(id);
 		given(contract.getMonthlyRent()).willReturn(RENT);
 		given(contract.getPaymentDayOfMonth()).willReturn(DAY);
 		given(contract.getGraceDays()).willReturn(GRACE);
+		given(contract.getStartDate()).willReturn(startDate);
 		Garage garage = mock(Garage.class);
 		given(garage.getLabel()).willReturn(garageLabel);
 		given(contract.getGarage()).willReturn(garage);

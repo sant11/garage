@@ -3,6 +3,7 @@ package com.example.garageops.payments;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -65,7 +66,10 @@ public class OverdueService {
 	 *         pure rule, and keeps only the overdue contracts as off-session-safe {@link OverdueRow}s.
 	 */
 	public List<OverdueRow> duesAsOf(Instant asOf) {
-		List<Contract> active = contracts().findActiveForOverdue();
+		LocalDate asOfDate = asOf.atZone(clock.getZone()).toLocalDate();
+		List<Contract> active = contracts().findActiveForOverdue().stream()
+			.filter(c -> !c.getStartDate().isAfter(asOfDate))
+			.toList();
 		if (active.isEmpty()) {
 			return List.of();
 		}
