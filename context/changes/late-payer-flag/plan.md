@@ -225,9 +225,9 @@ None. No schema change, no new table, no data backfill. The two new `application
 
 #### Manual
 
-- [ ] 2.4 Tenant with ≥ 2 events shows badge + count tooltip on `tenants/<id>`
-- [ ] 2.5 Tenant with 0–1 events shows no badge
-- [ ] 2.6 Late history on an ended/archived contract still flags
-- [ ] 2.7 Out-of-term period produces no false-positive flag
-- [ ] 2.8 `min-events=3` override changes who is flagged
-- [ ] 2.9 Badge legible on phone-width viewport
+- [x] 2.4 Tenant with ≥ 2 events shows badge + count tooltip on `tenants/<id>` — owner-confirmed 2026-06-25
+- [x] 2.5 Tenant with 0–1 events shows no badge — owner-confirmed 2026-06-25
+- [x] 2.6 Late history on an ended/archived contract still flags — owner-confirmed 2026-06-25
+- [x] 2.7 Out-of-term period produces no false-positive flag — owner-confirmed 2026-06-25
+- [x] 2.8 `min-events=3` override changes who is flagged — owner-confirmed 2026-06-25
+- [x] 2.9 Badge legible on phone-width viewport — owner-confirmed 2026-06-25
