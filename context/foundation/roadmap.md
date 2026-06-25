@@ -36,7 +36,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | done     |
 | S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | done |
 | S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | done     |
-| S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | proposed |
+| S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | done |
 | S-07  | late-payer-flag            | see a frequent-late-payer flag on a tenant's profile              | S-05, S-03    | FR-020                            | proposed |
 
 ## Streams
@@ -162,7 +162,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** the north star — the validation milestone that proves the whole product hypothesis. Sequenced as early as its three signals' data sources allow, which is necessarily after contracts (S-04, for vacant + ending) and payments (S-05, for overdue). Empty-state copy per US-01 acceptance criteria matters here so a day-one empty dashboard still reads well.
-- **Status:** proposed
+- **Status:** done
 
 ### S-07: Frequent-late-payer flag
 
@@ -223,3 +223,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-03: Owner can add a tenant (name + contact info) and view a tenant profile listing their current and past contracts.** — Archived 2026-06-06 → `context/archive/2026-06-03-tenant-management/`. Lesson: —.
 - **S-04: Owner can create a contract linking one tenant to one garage (start date, required end date, monthly rent, payment day-of-month), end a contract early on the actual move-out date, and view a garage's full rental history.** — Archived 2026-06-11 → `context/archive/2026-06-06-rental-contracts/`. Lesson: —.
 - **S-05: Owner can record payments against a contract (amount, date, optional note; multiple payments per period allowed) and view current dues / overdue per tenant and across the portfolio, with overdue derived per the FR-013 rule.** — Archived 2026-06-22 → `context/archive/2026-06-11-payments-overdue/`. Lesson: exclude future-start contracts from dues derivation (commit 3c9efff).
+- **S-06: Owner lands, after login, on a dashboard listing garages overdue on payment, garages currently vacant, and contracts ending in the next 30 days — each row drillable into the underlying garage / tenant / contract.** — Archived 2026-06-25 → `context/archive/2026-06-25-action-dashboard/`. Lesson: —.
