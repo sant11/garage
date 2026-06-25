@@ -47,7 +47,7 @@ import jakarta.annotation.security.PermitAll;
  * <p>Each garage shows a problem / rented / free status, where "rented" is derived from a current
  * active S-04 contract (FR-005): the set of rented garage ids is computed once per refresh in a
  * single batch query across every displayed garage, never per row. The garage label links through to
- * its {@code garages/:id} detail view. {@code @PermitAll} mirrors {@code HomeView}; the parent
+ * its {@code garages/:id} detail view. {@code @PermitAll} mirrors the sibling views; the parent
  * {@code MainLayout} is already annotated, so the whole navigation chain is owner-gated.
  */
 @Route(value = "locations", layout = MainLayout.class)

@@ -37,7 +37,8 @@ import jakarta.persistence.EntityNotFoundException;
  * <p><b>The contract section is an honest empty-state, not a stub.</b> No {@code Contract} entity
  * exists yet (S-04). When S-04 lands it fills the seam by swapping the body of {@link
  * #contractsSection()} — the {@link Paragraph} becomes a {@code Grid<Contract>} — without touching the
- * route, the header, or this class's shape (mirroring the {@code HomeView} "comes later" precedent).
+ * route, the header, or this class's shape (the same placeholder-now, real-later precedent the
+ * landing view followed).
  * The header keeps a layout slot open for the badge but builds none: an always-absent badge would
  * falsely signal "not a late payer".
  *

@@ -1,5 +1,6 @@
 package com.example.garageops.ui;
 
+import com.example.garageops.dashboard.DashboardView;
 import com.example.garageops.locations.LocationsView;
 import com.example.garageops.payments.DuesView;
 import com.example.garageops.tenants.TenantsView;
@@ -20,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
  * carries the app header and the logout control. S-02+ add navigation here.
  *
  * <p>{@code @PermitAll} because Vaadin's view-access check covers the whole navigation chain:
- * a permitted child view (e.g. {@code HomeView}) is still denied if its parent layout carries
+ * a permitted child view (e.g. {@code DashboardView}) is still denied if its parent layout carries
  * no access annotation. The flat single-owner role means any authenticated user may see the shell.
  *
  * <p>Logout is delegated to the shared {@link AuthenticationContext} bean (constructor-injected)
@@ -50,6 +51,7 @@ public class MainLayout extends AppLayout {
 		addToNavbar(new DrawerToggle(), header);
 
 		SideNav nav = new SideNav();
+		nav.addItem(new SideNavItem("Dashboard", DashboardView.class));
 		nav.addItem(new SideNavItem("Locations", LocationsView.class));
 		nav.addItem(new SideNavItem("Tenants", TenantsView.class));
 		nav.addItem(new SideNavItem("Dues", DuesView.class));

@@ -215,9 +215,9 @@ No schema changes — all three signals derive from existing tables (contracts, 
 
 #### Automated
 
-- [x] 1.1 Build + full test suite pass: `mvnw.cmd verify`
-- [x] 1.2 New service tests pass: `mvnw.cmd test -Dtest=DashboardServiceTests`
-- [x] 1.3 No `@ManyToOne` added without explicit `fetch = FetchType.LAZY` (grep check)
+- [x] 1.1 Build + full test suite pass: `mvnw.cmd verify` — e1a9a87
+- [x] 1.2 New service tests pass: `mvnw.cmd test -Dtest=DashboardServiceTests` — e1a9a87
+- [x] 1.3 No `@ManyToOne` added without explicit `fetch = FetchType.LAZY` (grep check) — e1a9a87
 
 #### Manual
 
@@ -229,9 +229,9 @@ No schema changes — all three signals derive from existing tables (contracts, 
 
 #### Automated
 
-- [ ] 2.1 Build + full test suite pass: `mvnw.cmd verify`
-- [ ] 2.2 App boots and `/actuator/health` is UP: `mvnw.cmd spring-boot:run`
-- [ ] 2.3 No dangling references to the removed `HomeView` (grep returns nothing)
+- [x] 2.1 Build + full test suite pass: `mvnw.cmd verify`
+- [x] 2.2 App boots and `/actuator/health` is UP: `mvnw.cmd spring-boot:run`
+- [x] 2.3 No dangling references to the removed `HomeView` (grep returns nothing)
 
 #### Manual
 
