@@ -3,6 +3,7 @@ package com.example.garageops.payments;
 import java.time.Clock;
 import java.time.ZoneId;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,8 +15,12 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>The injectable clock was deliberately deferred to S-05 by the contracts slice. Tests inject a
  * {@link Clock#fixed} instead of this bean, pinning both the instant and the zone.
+ *
+ * <p>Also the registration point for {@link LatePayerProperties} (S-07) — the codebase has no
+ * {@code @ConfigurationPropertiesScan}, so the constructor-bound record is enabled here.
  */
 @Configuration
+@EnableConfigurationProperties(LatePayerProperties.class)
 public class ClockConfig {
 
 	/** The zone every overdue calculation is evaluated in. */

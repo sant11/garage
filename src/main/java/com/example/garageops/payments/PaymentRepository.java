@@ -53,6 +53,23 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	List<ContractPaidSum> sumPaidByContractIdInPeriod(@Param("contractIds") List<Long> contractIds,
 			@Param("periodStart") LocalDate periodStart, @Param("periodEnd") LocalDate periodEnd);
 
+	/**
+	 * Per-contract sum of payment {@code amount} in {@code [periodStart, periodEnd]} <em>including</em>
+	 * archived rows — the historical-reconstruction sibling of {@link #sumPaidByContractIdInPeriod}.
+	 * The S-07 late-payer derivation re-runs the overdue rule over past periods of contracts that may
+	 * since have been archived; archiving a contract cascade-archives its payments (FR-021 retain), so
+	 * excluding archived rows here would report 0-paid for a genuinely-paid archived period and flag
+	 * every in-window month as overdue. Archiving is retention, not evidence of non-payment, so this
+	 * query keeps archived payments in the sum. The live overdue path deliberately does <em>not</em>
+	 * use this — it must keep excluding archived rows ({@link #sumPaidByContractIdInPeriod}).
+	 */
+	@Query("select p.contract.id as contractId, sum(p.amount) as paidSum from Payment p "
+			+ "where p.contract.id in :contractIds and p.date between :periodStart and :periodEnd "
+			+ "group by p.contract.id")
+	List<ContractPaidSum> sumPaidByContractIdInPeriodIncludingArchived(
+			@Param("contractIds") List<Long> contractIds,
+			@Param("periodStart") LocalDate periodStart, @Param("periodEnd") LocalDate periodEnd);
+
 	/** Projection for the batch paid-sum aggregation: one summed amount per contract id. */
 	interface ContractPaidSum {
 		Long getContractId();

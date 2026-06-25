@@ -36,7 +36,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | done     |
 | S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | done |
 | S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | done     |
-| S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | done |
+| S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | done     |
 | S-07  | late-payer-flag            | see a frequent-late-payer flag on a tenant's profile              | S-05, S-03    | FR-020                            | proposed |
 
 ## Streams
@@ -188,7 +188,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-03       | tenant-management          | Add tenants & tenant profile                            | done                  | Archived 2026-06-06 |
 | S-04       | rental-contracts           | Create/end contracts & garage rental history           | done                  | Archived 2026-06-11 |
 | S-05       | payments-and-overdue       | Record payments & derive overdue                        | done                  | Archived 2026-06-22 |
-| S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | yes                   | Prereqs S-04, S-05 met — north star. Run `/10x-plan action-dashboard`. |
+| S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | done                  | Archived 2026-06-25 → north star delivered. |
 | S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | yes                   | Prereqs S-05, S-03 met; parallel with S-06. Run `/10x-plan late-payer-flag`. |
 
 ## Open Roadmap Questions
