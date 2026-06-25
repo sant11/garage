@@ -210,18 +210,18 @@ None. No schema change, no new table, no data backfill. The two new `application
 
 #### Automated
 
-- [x] 1.1 Single-file compile of each new/changed file passes
-- [x] 1.2 `LatePayerServiceTests` passes (`mvnw.cmd test -Dtest=LatePayerServiceTests`)
-- [x] 1.3 Full suite passes (`mvnw.cmd test`)
-- [x] 1.4 No field `@Autowired` and no `@ManyToOne` without explicit LAZY introduced
+- [x] 1.1 Single-file compile of each new/changed file passes — 1c48c7c
+- [x] 1.2 `LatePayerServiceTests` passes (`mvnw.cmd test -Dtest=LatePayerServiceTests`) — 1c48c7c
+- [x] 1.3 Full suite passes (`mvnw.cmd test`) — 1c48c7c
+- [x] 1.4 No field `@Autowired` and no `@ManyToOne` without explicit LAZY introduced — 1c48c7c
 
 ### Phase 2: Profile badge
 
 #### Automated
 
-- [ ] 2.1 Single-file compile of `TenantProfileView.java` passes
-- [ ] 2.2 Full suite passes (`mvnw.cmd test`)
-- [ ] 2.3 App boots without `LazyInitializationException` or wiring errors
+- [x] 2.1 Single-file compile of `TenantProfileView.java` passes
+- [x] 2.2 Full suite passes (`mvnw.cmd test`)
+- [x] 2.3 App boots without `LazyInitializationException` or wiring errors
 
 #### Manual
 

@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.example.garageops.contracts.Contract;
 import com.example.garageops.contracts.ContractService;
+import com.example.garageops.payments.LatePayerFlag;
+import com.example.garageops.payments.LatePayerService;
 import com.example.garageops.payments.Payment;
 import com.example.garageops.payments.PaymentService;
 import com.example.garageops.ui.MainLayout;
@@ -42,6 +44,10 @@ import jakarta.persistence.EntityNotFoundException;
  * The header keeps a layout slot open for the badge but builds none: an always-absent badge would
  * falsely signal "not a late payer".
  *
+ * <p>The header's late-payer slot (S-07) is now filled: {@link LatePayerService} derives the FR-020
+ * flag live on load and, when set, a "frequent late payer" badge renders beside the name. When unset,
+ * the header is unchanged — no always-absent badge, which would falsely read as "not a late payer".
+ *
  * <p>An unknown or archived tenant id throws {@link NotFoundException} so the route surfaces a 404
  * rather than a blank or partial profile. {@code @PermitAll} mirrors the sibling views; the parent
  * {@code MainLayout} is already annotated, so the route is owner-gated.
@@ -54,12 +60,14 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 	private final TenantService tenantService;
 	private final ContractService contractService;
 	private final PaymentService paymentService;
+	private final LatePayerService latePayerService;
 
 	public TenantProfileView(TenantService tenantService, ContractService contractService,
-			PaymentService paymentService) {
+			PaymentService paymentService, LatePayerService latePayerService) {
 		this.tenantService = tenantService;
 		this.contractService = contractService;
 		this.paymentService = paymentService;
+		this.latePayerService = latePayerService;
 
 		setSizeFull();
 		setPadding(true);
@@ -85,9 +93,17 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 		removeAll();
 
 		H2 name = new H2(tenant.getName());
-		// Open header slot: a future late-payer badge (S-07) drops in beside the name here. No badge
-		// is built now — an always-absent badge would falsely read as "not a late payer".
 		HorizontalLayout header = new HorizontalLayout(name);
+		// S-07 badge slot: render only when the tenant is actually flagged. An always-absent badge
+		// would falsely read as "not a late payer", so nothing is added below the threshold.
+		LatePayerFlag flag = latePayerService.evaluate(tenant.getId());
+		if (flag.flagged()) {
+			Span badge = new Span("frequent late payer");
+			badge.getElement().getThemeList().add("badge error");
+			badge.getElement().setProperty("title",
+				flag.eventCount() + " overdue events in the last " + flag.windowMonths() + " months");
+			header.add(badge);
+		}
 		header.setWidthFull();
 		header.setAlignItems(FlexComponent.Alignment.CENTER);
 		header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
