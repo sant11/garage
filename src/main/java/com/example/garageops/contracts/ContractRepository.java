@@ -1,5 +1,6 @@
 package com.example.garageops.contracts;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -61,4 +62,34 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
 	 */
 	@Query("select c from Contract c where c.garage.id in :garageIds and c.archivedAt is null")
 	List<Contract> findNonArchivedByGarageIdIn(@Param("garageIds") List<Long> garageIds);
+
+	/**
+	 * Active, non-archived contracts whose {@code plannedEndDate} falls within {@code [from, to]}
+	 * inclusive — the dashboard "ending soon" signal (S-06, FR-018). Already-ended ({@code endedOn}
+	 * set) and archived contracts are excluded so a closed contract never surfaces as ending soon.
+	 * Fetches {@code garage} and {@code tenant} because the dashboard renders both labels off-session
+	 * ({@code open-in-view=false}, no read-path transaction); mirrors {@link #findActiveForOverdue()}.
+	 */
+	@Query("select c from Contract c join fetch c.garage join fetch c.tenant "
+			+ "where c.endedOn is null and c.archivedAt is null "
+			+ "and c.plannedEndDate between :from and :to order by c.plannedEndDate asc")
+	List<Contract> findEndingBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
+	/**
+	 * The most recent contract end date per garage, across the given garage ids — the batch the
+	 * dashboard uses to derive how long each vacant garage has been empty without an N+1 per-garage
+	 * scan (S-06). Projection-only (ids + dates), so no fetch is needed; follows the
+	 * {@code PaymentRepository.ContractPaidSum} projection pattern. Garages with no ended contract are
+	 * simply absent from the result (the caller falls back to the garage's creation date).
+	 */
+	@Query("select c.garage.id as garageId, max(c.endedOn) as lastEnded from Contract c "
+			+ "where c.garage.id in :garageIds and c.endedOn is not null group by c.garage.id")
+	List<GarageLastEnded> findLastEndedByGarageIdIn(@Param("garageIds") List<Long> garageIds);
+
+	/** Projection for the per-garage most-recent end date: one {@code lastEnded} per garage id. */
+	interface GarageLastEnded {
+		Long getGarageId();
+
+		LocalDate getLastEnded();
+	}
 }

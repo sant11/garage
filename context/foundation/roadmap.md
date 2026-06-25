@@ -3,7 +3,7 @@ project: GarageOps
 version: 1
 status: draft
 created: 2026-05-26
-updated: 2026-06-11
+updated: 2026-06-25
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -35,7 +35,7 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 | S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | done     |
 | S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | done     |
 | S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | done |
-| S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | proposed |
+| S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | done     |
 | S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | proposed |
 | S-07  | late-payer-flag            | see a frequent-late-payer flag on a tenant's profile              | S-05, S-03    | FR-020                            | proposed |
 
@@ -150,7 +150,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The grace-period default (5 days, FR-013) is a starting value to revisit against real payment patterns — Owner: owner. Block: no.
 - **Risk:** FR-013's overdue derivation (per-period payment-sum vs monthly rent by `payment_day + grace_days`) is the most load-bearing business rule in the product; getting it right here is what makes the dashboard's overdue signal trustworthy.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: Action dashboard
 
@@ -181,15 +181,15 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 | Roadmap ID | Change ID                  | Suggested issue title                                  | Ready for `/10x-plan` | Notes |
 | ---------- | -------------------------- | ------------------------------------------------------ | --------------------- | ----- |
-| F-01       | access-control-foundation  | Wire Spring Security + gate all routes to login        | yes                   | Run `/10x-plan access-control-foundation`. Parallel with F-02. |
-| F-02       | jpa-persistence-foundation | Establish JPA persistence + archive-only convention    | yes                   | Run `/10x-plan jpa-persistence-foundation`. Swaps the JDBC scaffold. Parallel with F-01. |
-| S-01       | owner-auth-signup-login    | Owner signup / login / logout                          | no                    | Needs F-01 |
-| S-02       | portfolio-locations-garages| Manage locations & garages with status                 | no                    | Needs S-01, F-02 |
-| S-03       | tenant-management          | Add tenants & tenant profile                            | no                    | Needs S-01, F-02; parallel with S-02 |
-| S-04       | rental-contracts           | Create/end contracts & garage rental history           | no                    | Needs S-02, S-03 |
-| S-05       | payments-and-overdue       | Record payments & derive overdue                        | no                    | Needs S-04 |
-| S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | no                    | Needs S-04, S-05 — north star |
-| S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | no                    | Needs S-05, S-03; parallel with S-06 |
+| F-01       | access-control-foundation  | Wire Spring Security + gate all routes to login        | done                  | Archived 2026-05-28 |
+| F-02       | jpa-persistence-foundation | Establish JPA persistence + archive-only convention    | done                  | Archived 2026-05-28 |
+| S-01       | owner-auth-signup-login    | Owner signup / login / logout                          | done                  | Archived 2026-05-30 |
+| S-02       | portfolio-locations-garages| Manage locations & garages with status                 | done                  | Archived 2026-06-03 |
+| S-03       | tenant-management          | Add tenants & tenant profile                            | done                  | Archived 2026-06-06 |
+| S-04       | rental-contracts           | Create/end contracts & garage rental history           | done                  | Archived 2026-06-11 |
+| S-05       | payments-and-overdue       | Record payments & derive overdue                        | done                  | Archived 2026-06-22 |
+| S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | yes                   | Prereqs S-04, S-05 met — north star. Run `/10x-plan action-dashboard`. |
+| S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | yes                   | Prereqs S-05, S-03 met; parallel with S-06. Run `/10x-plan late-payer-flag`. |
 
 ## Open Roadmap Questions
 
@@ -222,3 +222,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-02: Owner can add, rename, and archive locations; add garages (label + default monthly rent) to a location; and view all garages grouped by location with each garage's status (free / problem; "rented" activates once contracts exist).** — Archived 2026-06-03 → `context/archive/2026-05-31-portfolio-locations-garages/`. Lesson: @ManyToOne LAZY needs explicit fetch-joins on off-session view/grouping paths (open-in-view=false) — codified in AGENTS.md.
 - **S-03: Owner can add a tenant (name + contact info) and view a tenant profile listing their current and past contracts.** — Archived 2026-06-06 → `context/archive/2026-06-03-tenant-management/`. Lesson: —.
 - **S-04: Owner can create a contract linking one tenant to one garage (start date, required end date, monthly rent, payment day-of-month), end a contract early on the actual move-out date, and view a garage's full rental history.** — Archived 2026-06-11 → `context/archive/2026-06-06-rental-contracts/`. Lesson: —.
+- **S-05: Owner can record payments against a contract (amount, date, optional note; multiple payments per period allowed) and view current dues / overdue per tenant and across the portfolio, with overdue derived per the FR-013 rule.** — Archived 2026-06-22 → `context/archive/2026-06-11-payments-overdue/`. Lesson: exclude future-start contracts from dues derivation (commit 3c9efff).
