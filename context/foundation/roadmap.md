@@ -189,7 +189,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-04       | rental-contracts           | Create/end contracts & garage rental history           | done                  | Archived 2026-06-11 |
 | S-05       | payments-and-overdue       | Record payments & derive overdue                        | done                  | Archived 2026-06-22 |
 | S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | done                  | Archived 2026-06-25 → north star delivered. |
-| S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | yes                   | Prereqs S-05, S-03 met; parallel with S-06. Run `/10x-plan late-payer-flag`. |
+| S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | done                  | Archived 2026-06-25. |
 
 ## Open Roadmap Questions
 
