@@ -221,24 +221,24 @@ No schema changes — all three signals derive from existing tables (contracts, 
 
 #### Manual
 
-- [ ] 1.4 `vacantGarages()` never-rented garage uses creation-date fallback for `daysVacant`
-- [ ] 1.5 `vacantGarages()` rented-then-vacated garage uses most-recent `endedOn`
-- [ ] 1.6 `endingSoon()` includes the 30-day boundary, excludes day-31 and already-ended contracts
+- [x] 1.4 `vacantGarages()` never-rented garage uses creation-date fallback for `daysVacant`
+- [x] 1.5 `vacantGarages()` rented-then-vacated garage uses most-recent `endedOn`
+- [x] 1.6 `endingSoon()` includes the 30-day boundary, excludes day-31 and already-ended contracts
 
 ### Phase 2: Dashboard view & landing wiring
 
 #### Automated
 
-- [x] 2.1 Build + full test suite pass: `mvnw.cmd verify`
-- [x] 2.2 App boots and `/actuator/health` is UP: `mvnw.cmd spring-boot:run`
-- [x] 2.3 No dangling references to the removed `HomeView` (grep returns nothing)
+- [x] 2.1 Build + full test suite pass: `mvnw.cmd verify` — 2151d91
+- [x] 2.2 App boots and `/actuator/health` is UP: `mvnw.cmd spring-boot:run` — 2151d91
+- [x] 2.3 No dangling references to the removed `HomeView` (grep returns nothing) — 2151d91
 
 #### Manual
 
-- [ ] 2.4 After login the owner lands on the dashboard at route `""`
-- [ ] 2.5 Three sections show correct counts and most-urgent-first ordering
-- [ ] 2.6 Each row drills to the correct `garages/:id` detail
-- [ ] 2.7 Empty portfolio shows each section's friendly empty line
-- [ ] 2.8 Mutating data elsewhere then returning reflects the change without a browser refresh
-- [ ] 2.9 Standalone Dues page (`"dues"`) still works unchanged
-- [ ] 2.10 Dashboard usable on a phone-sized viewport
+- [x] 2.4 After login the owner lands on the dashboard at route `""`
+- [x] 2.5 Three sections show correct counts and most-urgent-first ordering
+- [x] 2.6 Each row drills to the correct `garages/:id` detail
+- [x] 2.7 Empty portfolio shows each section's friendly empty line
+- [x] 2.8 Mutating data elsewhere then returning reflects the change without a browser refresh
+- [x] 2.9 Standalone Dues page (`"dues"`) still works unchanged
+- [x] 2.10 Dashboard usable on a phone-sized viewport
