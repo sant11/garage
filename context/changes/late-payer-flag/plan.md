@@ -219,9 +219,9 @@ None. No schema change, no new table, no data backfill. The two new `application
 
 #### Automated
 
-- [x] 2.1 Single-file compile of `TenantProfileView.java` passes
-- [x] 2.2 Full suite passes (`mvnw.cmd test`)
-- [x] 2.3 App boots without `LazyInitializationException` or wiring errors
+- [x] 2.1 Single-file compile of `TenantProfileView.java` passes — 407ddf1
+- [x] 2.2 Full suite passes (`mvnw.cmd test`) — 407ddf1
+- [x] 2.3 App boots without `LazyInitializationException` or wiring errors — 407ddf1
 
 #### Manual
 
