@@ -73,6 +73,10 @@ public class LatePayerService {
 		Instant now = clock.instant();
 		ZoneId zone = clock.getZone();
 
+		// Off-session read (spring.jpa.open-in-view=false, not @Transactional): the counting path below
+		// touches only scalar Contract fields. findByTenantIdOrderByStartDateDesc fetch-joins c.garage but
+		// NOT c.tenant — any future edit that traverses contract.getTenant()/getGarage() here must add the
+		// matching JOIN FETCH to that finder or it will throw LazyInitializationException at runtime.
 		List<Contract> contracts = contracts().findByTenantIdOrderByStartDateDesc(tenantId);
 
 		// In-term (contract, period) candidates to judge, plus the contract ids touching each period.

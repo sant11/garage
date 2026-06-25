@@ -98,11 +98,7 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 		// would falsely read as "not a late payer", so nothing is added below the threshold.
 		LatePayerFlag flag = latePayerService.evaluate(tenant.getId());
 		if (flag.flagged()) {
-			Span badge = new Span("frequent late payer");
-			badge.getElement().getThemeList().add("badge error");
-			badge.getElement().setProperty("title",
-				flag.eventCount() + " overdue events in the last " + flag.windowMonths() + " months");
-			header.add(badge);
+			header.add(latePayerBadge(flag));
 		}
 		header.setWidthFull();
 		header.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -191,6 +187,17 @@ public class TenantProfileView extends VerticalLayout implements HasUrlParameter
 			e -> UI.getCurrent().navigate("garages/" + garage.getId()));
 		link.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
 		return link;
+	}
+
+	/** The header's "frequent late payer" badge (S-07 / FR-020), built only when the tenant is flagged
+	 * (see {@link #render}); mirrors {@link #statusBadge} and follows the {@code LocationsView} problem-badge
+	 * precedent — {@code badge error} theme plus a tooltip carrying the overdue-event count. */
+	private Span latePayerBadge(LatePayerFlag flag) {
+		Span badge = new Span("frequent late payer");
+		badge.getElement().getThemeList().add("badge error");
+		badge.getElement().setProperty("title",
+			flag.eventCount() + " overdue events in the last " + flag.windowMonths() + " months");
+		return badge;
 	}
 
 	private Span statusBadge(Contract contract, LocalDate today) {

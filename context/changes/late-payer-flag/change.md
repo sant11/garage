@@ -1,7 +1,7 @@
 ---
 change_id: late-payer-flag
 title: Frequent-late-payer flag
-status: implemented
+status: impl_reviewed
 created: 2026-06-25
 updated: 2026-06-25
 ---
