@@ -3,7 +3,7 @@ project: GarageOps
 version: 1
 status: draft
 created: 2026-05-26
-updated: 2026-05-26
+updated: 2026-06-25
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -29,15 +29,15 @@ A single garage owner tracks rentals in Excel, where overdue payments, aging-vac
 
 | ID    | Change ID                  | Outcome (user can …)                                              | Prerequisites | PRD refs                          | Status   |
 | ----- | -------------------------- | ----------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
-| F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | ready    |
-| F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | ready    |
-| S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | proposed |
-| S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | proposed |
-| S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | proposed |
-| S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | proposed |
-| S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | proposed |
-| S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | proposed |
-| S-07  | late-payer-flag            | see a frequent-late-payer flag on a tenant's profile              | S-05, S-03    | FR-020                            | proposed |
+| F-01  | access-control-foundation  | (foundation) Spring Security wired; all routes gated to login      | —             | Access Control, NFR-privacy       | done     |
+| F-02  | jpa-persistence-foundation | (foundation) JPA persistence + archive-only convention established | —             | FR-021, NFR-no-data-loss          | done     |
+| S-01  | owner-auth-signup-login    | sign up, log in from any device, and log out                      | F-01          | FR-001, FR-002                    | done     |
+| S-02  | portfolio-locations-garages| manage locations & garages, see each garage's status              | S-01, F-02    | FR-003, FR-004, FR-005, FR-006, FR-021 | done     |
+| S-03  | tenant-management          | add tenants and view a tenant profile with contract history       | S-01, F-02    | FR-007, FR-008, FR-021            | done     |
+| S-04  | rental-contracts           | create / end contracts and view a garage's rental history         | S-02, S-03    | FR-009, FR-010, FR-011, FR-021    | done |
+| S-05  | payments-and-overdue       | record payments and see dues / overdue per tenant & portfolio     | S-04          | FR-012, FR-013, FR-014            | done     |
+| S-06  | action-dashboard           | land on a dashboard of overdue / vacant / ending-soon, drillable  | S-04, S-05    | US-01, FR-015, FR-016, FR-017, FR-018 | done     |
+| S-07  | late-payer-flag            | see a frequent-late-payer flag on a tenant's profile              | S-05, S-03    | FR-020                            | done     |
 
 ## Streams
 
@@ -54,7 +54,7 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 What's already in place in the codebase as of 2026-05-26 (auto-researched + user-confirmed).
 Foundations below assume these are present and do NOT re-scaffold them.
 
-- **Frontend:** absent — no UI layer; no Thymeleaf/templates, no SPA. The view-layer choice was explicitly deferred at stack selection (`tech-stack.md`).
+- **Frontend:** not yet wired in code, but the view-layer choice is now **resolved to Vaadin Flow 25** (server-side Java UI, main framework alongside Spring — no Thymeleaf, no separate SPA; see `tech-stack.md`). Each user-visible slice (S-01–S-07) builds its screens as Vaadin `@Route` views over the Spring services.
 - **Backend / API:** partial — Spring Boot 4.0.6 app boots (`GarageopsApplication.java`); webmvc + actuator wired. Zero controllers/services/domain; only `/actuator/health`.
 - **Data:** partial — Postgres + Flyway wired and tuned (`application.properties`, HikariCP), but the scaffold uses `spring-boot-starter-jdbc`. **Per user correction, the persistence layer will be JPA, not JDBC** (F-02 owns the swap). Only migration is `V1__init.sql` = a `deploy_smoke_test` table; no domain schema.
 - **Auth:** absent — no Spring Security dependency or config. FR-001/FR-002 not started.
@@ -74,7 +74,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Spring Security ceremony is flagged in `tech-stack.md` as known friction; sequenced first so the gating contract is proven before any data-bearing route is exposed. This is the privacy guardrail's load-bearing enabler.
-- **Status:** ready
+- **Status:** done
 
 ### F-02: JPA persistence & archive-only foundation
 
@@ -87,7 +87,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** the JDBC scaffold (and its `V1__init.sql` smoke table) must be swapped to JPA per the stack correction; doing it once as a foundation avoids each slice reinventing persistence. Keep it thin — the entities themselves land in their slices, not here. Over-broadening this into "build the whole schema" is the anti-pattern to avoid.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -101,7 +101,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** first user-visible slice and the entry to every gated flow; thin (single owner, one-time signup) but proves the F-01 gating contract end-to-end before any data slice depends on it.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Manage locations & garages
 
@@ -113,7 +113,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** garage status "rented" (part of FR-005) is derived from active contracts (S-04); this slice ships free/problem and the rented state activates once S-04 lands. Archiving a location/garage exercises the FR-021 retain-underlying-records rule.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Manage tenants
 
@@ -125,7 +125,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** the profile's contract list is empty until S-04, but the profile page is also the drill-through target (FR-018) and the surface for the late-payer flag (S-07), so it is built now. Archiving a tenant exercises FR-021.
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Create & manage rental contracts
 
@@ -137,7 +137,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** completes the garage "rented" status (FR-005) and populates tenant profiles (FR-008); the contract's required end-date and payment-day fields are exactly the inputs the dashboard and the overdue rule consume, so this slice's shape gates S-05 and S-06. Ending a contract retains its records (FR-021).
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Record payments & derive overdue
 
@@ -150,7 +150,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The grace-period default (5 days, FR-013) is a starting value to revisit against real payment patterns — Owner: owner. Block: no.
 - **Risk:** FR-013's overdue derivation (per-period payment-sum vs monthly rent by `payment_day + grace_days`) is the most load-bearing business rule in the product; getting it right here is what makes the dashboard's overdue signal trustworthy.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: Action dashboard
 
@@ -162,7 +162,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** the north star — the validation milestone that proves the whole product hypothesis. Sequenced as early as its three signals' data sources allow, which is necessarily after contracts (S-04, for vacant + ending) and payments (S-05, for overdue). Empty-state copy per US-01 acceptance criteria matters here so a day-one empty dashboard still reads well.
-- **Status:** proposed
+- **Status:** done
 
 ### S-07: Frequent-late-payer flag
 
@@ -175,21 +175,21 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The 2-in-6 threshold is an arbitrary default to validate against real portfolio history (PRD Open Q1) — Owner: owner. Block: no.
 - **Risk:** informational and owner-only (never tenant-visible); depends on a history of overdue events existing, so it follows S-05. Lower urgency than the dashboard — runs parallel to S-06 or after it without affecting the north star.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                  | Suggested issue title                                  | Ready for `/10x-plan` | Notes |
 | ---------- | -------------------------- | ------------------------------------------------------ | --------------------- | ----- |
-| F-01       | access-control-foundation  | Wire Spring Security + gate all routes to login        | yes                   | Run `/10x-plan access-control-foundation`. Parallel with F-02. |
-| F-02       | jpa-persistence-foundation | Establish JPA persistence + archive-only convention    | yes                   | Run `/10x-plan jpa-persistence-foundation`. Swaps the JDBC scaffold. Parallel with F-01. |
-| S-01       | owner-auth-signup-login    | Owner signup / login / logout                          | no                    | Needs F-01 |
-| S-02       | portfolio-locations-garages| Manage locations & garages with status                 | no                    | Needs S-01, F-02 |
-| S-03       | tenant-management          | Add tenants & tenant profile                            | no                    | Needs S-01, F-02; parallel with S-02 |
-| S-04       | rental-contracts           | Create/end contracts & garage rental history           | no                    | Needs S-02, S-03 |
-| S-05       | payments-and-overdue       | Record payments & derive overdue                        | no                    | Needs S-04 |
-| S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | no                    | Needs S-04, S-05 — north star |
-| S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | no                    | Needs S-05, S-03; parallel with S-06 |
+| F-01       | access-control-foundation  | Wire Spring Security + gate all routes to login        | done                  | Archived 2026-05-28 |
+| F-02       | jpa-persistence-foundation | Establish JPA persistence + archive-only convention    | done                  | Archived 2026-05-28 |
+| S-01       | owner-auth-signup-login    | Owner signup / login / logout                          | done                  | Archived 2026-05-30 |
+| S-02       | portfolio-locations-garages| Manage locations & garages with status                 | done                  | Archived 2026-06-03 |
+| S-03       | tenant-management          | Add tenants & tenant profile                            | done                  | Archived 2026-06-06 |
+| S-04       | rental-contracts           | Create/end contracts & garage rental history           | done                  | Archived 2026-06-11 |
+| S-05       | payments-and-overdue       | Record payments & derive overdue                        | done                  | Archived 2026-06-22 |
+| S-06       | action-dashboard           | Action dashboard (overdue / vacant / ending-soon)      | done                  | Archived 2026-06-25 → north star delivered. |
+| S-07       | late-payer-flag            | Frequent-late-payer flag on tenant profile             | done                  | Archived 2026-06-25. |
 
 ## Open Roadmap Questions
 
@@ -215,3 +215,13 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Done
 
 (Empty on first generation. `/10x-archive` appends entries here — and flips the matching item's `Status` to `done` — when a change whose `Change ID` matches a roadmap item is archived. Do NOT pre-populate.)
+
+- **F-02: (foundation) JPA persistence + archive-only convention established** — Archived 2026-05-28 → `context/archive/2026-05-27-jpa-persistence-foundation/`. Lesson: —.
+- **F-01: (foundation) Spring Security wired; all routes gated to login** — Archived 2026-05-28 → `context/archive/2026-05-26-access-control-foundation/`. Lesson: —.
+- **S-01: Owner can sign up with email + password, log in from any device with the same credentials, and log out.** — Archived 2026-05-30 → `context/archive/2026-05-28-owner-auth-signup-login/`. Lesson: —.
+- **S-02: Owner can add, rename, and archive locations; add garages (label + default monthly rent) to a location; and view all garages grouped by location with each garage's status (free / problem; "rented" activates once contracts exist).** — Archived 2026-06-03 → `context/archive/2026-05-31-portfolio-locations-garages/`. Lesson: @ManyToOne LAZY needs explicit fetch-joins on off-session view/grouping paths (open-in-view=false) — codified in AGENTS.md.
+- **S-03: Owner can add a tenant (name + contact info) and view a tenant profile listing their current and past contracts.** — Archived 2026-06-06 → `context/archive/2026-06-03-tenant-management/`. Lesson: —.
+- **S-04: Owner can create a contract linking one tenant to one garage (start date, required end date, monthly rent, payment day-of-month), end a contract early on the actual move-out date, and view a garage's full rental history.** — Archived 2026-06-11 → `context/archive/2026-06-06-rental-contracts/`. Lesson: —.
+- **S-05: Owner can record payments against a contract (amount, date, optional note; multiple payments per period allowed) and view current dues / overdue per tenant and across the portfolio, with overdue derived per the FR-013 rule.** — Archived 2026-06-22 → `context/archive/2026-06-11-payments-overdue/`. Lesson: exclude future-start contracts from dues derivation (commit 3c9efff).
+- **S-06: Owner lands, after login, on a dashboard listing garages overdue on payment, garages currently vacant, and contracts ending in the next 30 days — each row drillable into the underlying garage / tenant / contract.** — Archived 2026-06-25 → `context/archive/2026-06-25-action-dashboard/`. Lesson: —.
+- **S-07: Owner sees, on a tenant's profile, a flag when that tenant has a pattern of late payments (≥ 2 overdue events in the last 6 months).** — Archived 2026-06-25 → `context/archive/2026-06-25-late-payer-flag/`. Lesson: —.

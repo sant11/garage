@@ -2,9 +2,10 @@
 change_id: access-control-foundation
 roadmap_id: F-01
 title: Wire Spring Security + gate all routes to login
-status: implementing
+status: archived
 created: 2026-05-26
-updated: 2026-05-27
+updated: 2026-05-28
+archived_at: 2026-05-28T20:56:14Z
 prd_refs: [Access Control, NFR-privacy, FR-001, FR-002]
 prerequisites: []
 parallel_with: [jpa-persistence-foundation]
