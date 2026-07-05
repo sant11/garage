@@ -33,14 +33,17 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
 	List<Contract> findByGarageIdAndEndedOnIsNull(Long garageId);
 
 	/**
-	 * Live contracts to scan for overdue dues (S-05): non-ended <em>and</em> non-archived. Fetches
-	 * {@code garage} and {@code tenant} because the Dues view renders both labels off-session
-	 * ({@code open-in-view=false}, no read-path transaction). The portfolio scan reuses this seam for
-	 * S-06; ended/archived contracts are excluded so they never surface as currently overdue.
+	 * Contracts to scan for overdue dues (S-05): every non-archived contract, <em>including</em>
+	 * ended ones — an ended contract with an unsettled balance must keep surfacing on Dues until the
+	 * debt is paid off (accrual stops at {@code endedOn}, but the row stays). Archived contracts
+	 * remain excluded: archiving is the owner's write-off gesture (FR-021), so an archived contract's
+	 * arrears leave Dues. Fetches {@code garage} and {@code tenant} because the Dues view renders
+	 * both labels off-session ({@code open-in-view=false}, no read-path transaction). The portfolio
+	 * scan reuses this seam for S-06.
 	 */
 	@Query("select c from Contract c join fetch c.garage join fetch c.tenant "
-			+ "where c.endedOn is null and c.archivedAt is null")
-	List<Contract> findActiveForOverdue();
+			+ "where c.archivedAt is null")
+	List<Contract> findNonArchivedForOverdue();
 
 	/**
 	 * Non-ended contracts across several garages in one query, to batch the portfolio "rented"
@@ -68,7 +71,8 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
 	 * inclusive — the dashboard "ending soon" signal (S-06, FR-018). Already-ended ({@code endedOn}
 	 * set) and archived contracts are excluded so a closed contract never surfaces as ending soon.
 	 * Fetches {@code garage} and {@code tenant} because the dashboard renders both labels off-session
-	 * ({@code open-in-view=false}, no read-path transaction); mirrors {@link #findActiveForOverdue()}.
+	 * ({@code open-in-view=false}, no read-path transaction); mirrors the fetch-join shape of
+	 * {@link #findNonArchivedForOverdue()}.
 	 */
 	@Query("select c from Contract c join fetch c.garage join fetch c.tenant "
 			+ "where c.endedOn is null and c.archivedAt is null "

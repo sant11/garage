@@ -99,11 +99,16 @@ public class OverdueRule {
 		return month;
 	}
 
-	// The earliest month whose due date falls on/after contractStart — NOT YearMonth.from(start):
-	// with a late payment day + grace a period's due date spills into the next month, so a contract
-	// can owe the month before its start month; conversely a contract started after its own month's
-	// due date first owes the next month. Same predicate as the services' in-effect-on-due-date guard.
-	private YearMonth firstOwedPeriod(LocalDate contractStart, int paymentDayOfMonth, int graceDays) {
+	/**
+	 * The earliest month whose due date falls on/after {@code contractStart} — NOT
+	 * {@code YearMonth.from(start)}: with a late payment day + grace a period's due date spills into
+	 * the next month, so a contract can owe the month before its start month; conversely a contract
+	 * started after its own month's due date first owes the next month. Same predicate as the
+	 * services' in-effect-on-due-date guard. Public because the {@code OverdueService} pre-filter
+	 * skips ended contracts whose {@code endedOn} precedes this period's due date (nothing ever
+	 * came due) before aggregating.
+	 */
+	public YearMonth firstOwedPeriod(LocalDate contractStart, int paymentDayOfMonth, int graceDays) {
 		YearMonth month = YearMonth.from(contractStart);
 		while (dueDate(month, paymentDayOfMonth, graceDays).isBefore(contractStart)) {
 			month = month.plusMonths(1);

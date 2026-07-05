@@ -10,8 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 /**
  * Spring Data access for {@link Payment}, covering the two read paths S-05 needs: the per-contract
- * and per-tenant payment history surfaces (FR-014), and the batch per-period paid-sum that feeds the
- * overdue rule (FR-013) — the codebase's first {@code SUM ... GROUP BY}.
+ * and per-tenant payment history surfaces (FR-014), and the batch total-paid aggregation that feeds
+ * the cumulative overdue rule (FR-013) — the codebase's first {@code SUM ... GROUP BY}.
  *
  * <p>The per-tenant finder renders the {@code garage} label off-session, so it {@code JOIN FETCH}es
  * {@code contract} and {@code garage} — {@code open-in-view=false} and the read paths are not
@@ -41,27 +41,25 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	List<Payment> findByTenantIdOrderByDateDesc(@Param("tenantId") Long tenantId);
 
 	/**
-	 * Per-contract sum of non-archived payment {@code amount} whose {@code date} falls within
-	 * {@code [periodStart, periodEnd]}, for the given contract ids — the single batch aggregation the
-	 * overdue/portfolio scan runs instead of a query per contract (avoids N+1; the seam S-06 reuses).
-	 * Contracts with no qualifying payment are simply absent from the result (treated as paid-zero by
-	 * the caller).
+	 * Per-contract sum of every non-archived payment {@code amount} — no date bounds — for the given
+	 * contract ids: the single batch aggregation the live overdue scan feeds the cumulative
+	 * {@code OverdueRule} (avoids N+1; the seam S-06 reuses). Payments have no period attribution, so
+	 * the whole ledger counts toward the balance and the rule credits it FIFO. Contracts with no
+	 * qualifying payment are simply absent from the result (treated as paid-zero by the caller).
 	 */
 	@Query("select p.contract.id as contractId, sum(p.amount) as paidSum from Payment p "
-			+ "where p.contract.id in :contractIds and p.date between :periodStart and :periodEnd "
-			+ "and p.archivedAt is null group by p.contract.id")
-	List<ContractPaidSum> sumPaidByContractIdInPeriod(@Param("contractIds") List<Long> contractIds,
-			@Param("periodStart") LocalDate periodStart, @Param("periodEnd") LocalDate periodEnd);
+			+ "where p.contract.id in :contractIds and p.archivedAt is null group by p.contract.id")
+	List<ContractPaidSum> sumPaidTotalByContractIdIn(@Param("contractIds") List<Long> contractIds);
 
 	/**
 	 * Per-contract sum of payment {@code amount} in {@code [periodStart, periodEnd]} <em>including</em>
-	 * archived rows — the historical-reconstruction sibling of {@link #sumPaidByContractIdInPeriod}.
+	 * archived rows — the historical-reconstruction sibling of {@link #sumPaidTotalByContractIdIn}.
 	 * The S-07 late-payer derivation re-runs the overdue rule over past periods of contracts that may
 	 * since have been archived; archiving a contract cascade-archives its payments (FR-021 retain), so
 	 * excluding archived rows here would report 0-paid for a genuinely-paid archived period and flag
 	 * every in-window month as overdue. Archiving is retention, not evidence of non-payment, so this
 	 * query keeps archived payments in the sum. The live overdue path deliberately does <em>not</em>
-	 * use this — it must keep excluding archived rows ({@link #sumPaidByContractIdInPeriod}).
+	 * use this — it must keep excluding archived rows ({@link #sumPaidTotalByContractIdIn}).
 	 */
 	@Query("select p.contract.id as contractId, sum(p.amount) as paidSum from Payment p "
 			+ "where p.contract.id in :contractIds and p.date between :periodStart and :periodEnd "

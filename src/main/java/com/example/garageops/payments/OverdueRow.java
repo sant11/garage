@@ -12,8 +12,10 @@ import java.math.BigDecimal;
  * @param garageId    the contract's garage, so the Dues view can drill through to {@code garages/:id}
  * @param garageLabel the garage's display label
  * @param tenantName  the renting tenant's name
- * @param amountDue   {@code monthlyRent − paidInPeriod} for the resolved period, never negative
- * @param daysOverdue whole days the resolved period is past its due date
+ * @param amountDue   the contract's cumulative balance ({@code periodsDue × monthlyRent − totalPaid},
+ *                    never negative) — may exceed one month's rent when several periods are in arrears
+ * @param daysOverdue whole days past the due date of the oldest period not fully covered by payments
+ *                    (FIFO credit)
  */
 public record OverdueRow(Long contractId, Long garageId, String garageLabel, String tenantName,
 		BigDecimal amountDue, long daysOverdue) {

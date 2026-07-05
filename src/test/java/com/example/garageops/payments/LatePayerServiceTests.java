@@ -135,7 +135,7 @@ class LatePayerServiceTests {
 		assertThat(flag.flagged()).isTrue();
 		assertThat(flag.eventCount()).isEqualTo(2);
 		// History reconstruction uses the include-archived aggregation, never the live (excludes-archived) one.
-		verify(paymentRepository, never()).sumPaidByContractIdInPeriod(any(), any(), any());
+		verify(paymentRepository, never()).sumPaidTotalByContractIdIn(any());
 	}
 
 	@Test

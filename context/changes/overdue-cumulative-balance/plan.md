@@ -485,21 +485,21 @@ persistent-arrears cascades now count) — mention this to the owner on rollout.
 
 #### Automated
 
-- [x] 1.1 Rule tests pass: `mvnw.cmd test -Dtest=OverdueRuleTests`
-- [x] 1.2 Full suite still compiles (call sites adapted mechanically): `mvnw.cmd test`
+- [x] 1.1 Rule tests pass: `mvnw.cmd test -Dtest=OverdueRuleTests` — e73ce4d
+- [x] 1.2 Full suite still compiles (call sites adapted mechanically): `mvnw.cmd test` — e73ce4d
 
 ### Phase 2: Live overdue path (Dues + Dashboard)
 
 #### Automated
 
-- [ ] 2.1 Service tests pass: `mvnw.cmd test -Dtest=OverdueServiceTests`
-- [ ] 2.2 Full suite green: `mvnw.cmd test`
+- [x] 2.1 Service tests pass: `mvnw.cmd test -Dtest=OverdueServiceTests`
+- [x] 2.2 Full suite green: `mvnw.cmd test`
 
 #### Manual
 
-- [ ] 2.3 Reproduction scenario shows no overdue on Dashboard/Dues
-- [ ] 2.4 Skipped-month contract stays on Dues with one rent outstanding
-- [ ] 2.5 Ended-with-debt contract stays on Dues until settled; settling (or archiving) removes it
+- [x] 2.3 Reproduction scenario shows no overdue on Dashboard/Dues
+- [x] 2.4 Skipped-month contract stays on Dues with one rent outstanding
+- [x] 2.5 Ended-with-debt contract stays on Dues until settled; settling (or archiving) removes it
 
 ### Phase 3: Late-payer flag
 
