@@ -76,8 +76,15 @@ public class OverdueService {
 
 		List<OverdueRow> dues = new ArrayList<>();
 		for (Contract contract : active) {
-			OverdueResult result = rule.evaluate(contract.getMonthlyRent(), contract.getPaymentDayOfMonth(),
-				contract.getGraceDays(), paidByContract.get(contract.getId()), asOf, clock.getZone());
+			int day = contract.getPaymentDayOfMonth();
+			int grace = contract.getGraceDays();
+			// Transitional: pin the cumulative rule to the single resolved period (its due date as
+			// the term start → exactly one period due) so the calendar-window aggregation above
+			// keeps its old meaning; the total-paid aggregation replaces this pinning.
+			LocalDate periodDue = rule.dueDate(
+				rule.latestFullyDuePeriod(day, grace, asOf, clock.getZone()), day, grace);
+			OverdueResult result = rule.evaluate(contract.getMonthlyRent(), day, grace,
+				periodDue, null, paidByContract.get(contract.getId()), asOf, clock.getZone());
 			if (result.overdue()) {
 				dues.add(new OverdueRow(contract.getId(), contract.getGarage().getId(),
 					contract.getGarage().getLabel(), contract.getTenant().getName(),

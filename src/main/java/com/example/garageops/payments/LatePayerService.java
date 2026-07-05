@@ -115,8 +115,11 @@ public class LatePayerService {
 			Contract contract = candidate.contract();
 			Instant asOf = candidate.due().plusDays(1).atStartOfDay(zone).toInstant();
 			BigDecimal paid = paidByKey.get(new ContractPeriod(contract.getId(), candidate.period()));
+			// Transitional: pin the cumulative rule to the single candidate period (its due date as
+			// the term start → exactly one period due) so the per-month aggregation above keeps its
+			// old meaning; the cumulative-through-due-date sums replace this pinning.
 			boolean overdue = rule.evaluate(contract.getMonthlyRent(), contract.getPaymentDayOfMonth(),
-				contract.getGraceDays(), paid, asOf, zone).overdue();
+				contract.getGraceDays(), candidate.due(), null, paid, asOf, zone).overdue();
 			if (overdue) {
 				eventCount++;
 			}
