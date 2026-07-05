@@ -505,9 +505,9 @@ persistent-arrears cascades now count) — mention this to the owner on rollout.
 
 #### Automated
 
-- [x] 3.1 Late-payer tests pass: `mvnw.cmd test -Dtest=LatePayerServiceTests`
-- [x] 3.2 Full build green: `mvnw.cmd verify`
+- [x] 3.1 Late-payer tests pass: `mvnw.cmd test -Dtest=LatePayerServiceTests` — dcf0608
+- [x] 3.2 Full build green: `mvnw.cmd verify` — dcf0608
 
 #### Manual
 
-- [x] 3.3 Tenant profile shows 1 late event / not flagged for the reproduction scenario
+- [x] 3.3 Tenant profile shows 1 late event / not flagged for the reproduction scenario — dcf0608
