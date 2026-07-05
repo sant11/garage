@@ -90,7 +90,7 @@ public class LatePayerService {
 			YearMonth p0 = rule.latestFullyDuePeriod(day, grace, now, zone);
 			for (int back = 0; back < windowMonths; back++) {
 				YearMonth period = p0.minusMonths(back);
-				LocalDate due = dueDate(period, day, grace);
+				LocalDate due = rule.dueDate(period, day, grace);
 				// Only count a period the contract was actually in effect for on its due date.
 				if (contract.getStartDate().isAfter(due) || effectiveEnd.isBefore(due)) {
 					continue;
@@ -123,12 +123,6 @@ public class LatePayerService {
 		}
 
 		return new LatePayerFlag(eventCount >= minEvents, eventCount, windowMonths, minEvents);
-	}
-
-	// dueDate lives privately in OverdueRule; recompute it here (one-liner) rather than widening that
-	// pure unit's API just for this caller.
-	private static LocalDate dueDate(YearMonth period, int paymentDayOfMonth, int graceDays) {
-		return period.atDay(paymentDayOfMonth).plusDays(graceDays);
 	}
 
 	private ContractRepository contracts() {

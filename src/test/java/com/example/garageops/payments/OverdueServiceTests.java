@@ -38,7 +38,7 @@ class OverdueServiceTests {
 	private static final BigDecimal RENT = new BigDecimal("250.00");
 	private static final int DAY = 10;
 	private static final int GRACE = 5;
-	// Started well before the earliest asOf the tests evaluate (2026-06-10), so the future-start
+	// Started well before the earliest due date the tests resolve, so the in-effect-on-due-date
 	// guard in OverdueService keeps every fixture contract in scope.
 	private static final LocalDate START = LocalDate.of(2026, 1, 1);
 	private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
@@ -149,6 +149,31 @@ class OverdueServiceTests {
 		});
 		// The future-start contract is filtered out before the period aggregation, so only the
 		// started contract's id reaches the paid-sum query.
+		verify(paymentRepository).sumPaidByContractIdInPeriod(
+			List.of(1L), LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+	}
+
+	@Test
+	void aContractStartedAfterThePeriodsDueDateOwesNothingForThatPeriod() {
+		// Regression: a contract started 2026-06-18 — after June's due date (06-15) but before the
+		// evaluation date (06-20) — is in effect "now", yet June predates its term, so it owes nothing
+		// and must not surface on Dues (the in-effect-on-due-date guard LatePayerService already
+		// applies to past periods). Its first liability is July, once July's due date passes. The
+		// sibling long-started contract stays overdue, proving the guard excludes selectively.
+		Contract started = contract(1L, "A-1", "Acme Co");
+		Contract justStarted = contract(2L, "A-2", "Beta Ltd", LocalDate.of(2026, 6, 18));
+		given(contractRepository.findActiveForOverdue()).willReturn(List.of(started, justStarted));
+		given(paymentRepository.sumPaidByContractIdInPeriod(anyList(), any(), any()))
+			.willReturn(List.of());
+
+		List<OverdueRow> dues = service.currentDues();
+
+		assertThat(dues).singleElement().satisfies(row -> {
+			assertThat(row.contractId()).isEqualTo(1L);
+			assertThat(row.amountDue()).isEqualByComparingTo(RENT);
+		});
+		// The just-started contract is filtered out before the aggregation, so only the long-started
+		// contract's id reaches the paid-sum query.
 		verify(paymentRepository).sumPaidByContractIdInPeriod(
 			List.of(1L), LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
 	}

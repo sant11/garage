@@ -75,7 +75,13 @@ public class OverdueRule {
 		return month;
 	}
 
-	private LocalDate dueDate(YearMonth period, int paymentDayOfMonth, int graceDays) {
+	/**
+	 * The due date of {@code period} under the given terms — {@code paymentDayOfMonth} days into the
+	 * month plus {@code graceDays}. Public because the services guard on it: a contract owes a period
+	 * only if it was in effect on that period's due date ({@code OverdueService} for the live period,
+	 * {@code LatePayerService} for past ones).
+	 */
+	public LocalDate dueDate(YearMonth period, int paymentDayOfMonth, int graceDays) {
 		return period.atDay(paymentDayOfMonth).plusDays(graceDays);
 	}
 }

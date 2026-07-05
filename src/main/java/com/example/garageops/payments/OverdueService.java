@@ -66,9 +66,8 @@ public class OverdueService {
 	 *         pure rule, and keeps only the overdue contracts as off-session-safe {@link OverdueRow}s.
 	 */
 	public List<OverdueRow> duesAsOf(Instant asOf) {
-		LocalDate asOfDate = asOf.atZone(clock.getZone()).toLocalDate();
 		List<Contract> active = contracts().findActiveForOverdue().stream()
-			.filter(c -> !c.getStartDate().isAfter(asOfDate))
+			.filter(c -> inEffectOnDueDate(c, asOf))
 			.toList();
 		if (active.isEmpty()) {
 			return List.of();
@@ -86,6 +85,18 @@ public class OverdueService {
 			}
 		}
 		return dues;
+	}
+
+	// A contract owes its resolved period only if it was in effect on that period's due date — the
+	// same guard LatePayerService applies to past periods. A contract that starts after the due date
+	// (including one that starts in the future) owed nothing for the period, so it must not surface
+	// as overdue merely because the period predates its term.
+	private boolean inEffectOnDueDate(Contract contract, Instant asOf) {
+		int day = contract.getPaymentDayOfMonth();
+		int grace = contract.getGraceDays();
+		YearMonth period = rule.latestFullyDuePeriod(day, grace, asOf, clock.getZone());
+		LocalDate due = rule.dueDate(period, day, grace);
+		return !contract.getStartDate().isAfter(due);
 	}
 
 	// Group the contracts by their resolved due period and run one aggregation per distinct period,
