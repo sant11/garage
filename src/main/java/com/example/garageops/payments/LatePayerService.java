@@ -20,21 +20,30 @@ import com.example.garageops.contracts.ContractRepository;
 /**
  * Derives the frequent-late-payer flag for one tenant (FR-020 / S-07) by re-running the pure
  * {@link OverdueRule} over each of the tenant's contracts' most-recent fully-due periods and counting
- * the overdue (contract, period) events against the configured threshold. No stored state, no schema
- * change — the verdict is computed live on profile load and returned as an off-session-safe
- * {@link LatePayerFlag}.
+ * the late (contract, period) events against the configured threshold. A period is a late event iff
+ * the contract's cumulative balance was negative the day after that period's due date — judged by
+ * summing every payment dated on/before the due date against all rent owed by then. No stored state,
+ * no schema change — the verdict is computed live on profile load and returned as an
+ * off-session-safe {@link LatePayerFlag}.
+ *
+ * <p><b>Late-but-eventually-paid still counts.</b> A rent settled after its due date leaves the
+ * event on record even once arrears clear — the flag surfaces habitual lateness, not current debt
+ * (Dues covers that). Conversely, persistent arrears <em>cascade</em>: because payments credit the
+ * oldest debt first (FIFO, no period attribution on {@code Payment}), one skipped month that is
+ * never caught up leaves the balance negative at every subsequent due date, producing an event per
+ * period until it is settled. Both are intended semantics.
  *
  * <p><b>Why this can't reuse {@link OverdueService#duesAsOf}.</b> That path scans
- * {@code findActiveForOverdue()}, which filters to non-ended <em>and</em> non-archived contracts. A
- * tenant's late history must survive a contract ending or being archived (FR-021 retains it), so this
- * derivation loads <em>all</em> the tenant's contracts via
+ * {@code findNonArchivedForOverdue()}, which excludes archived contracts, and sums only non-archived
+ * payments. A tenant's late history must survive a contract being archived (FR-021 retains it), so
+ * this derivation loads <em>all</em> the tenant's contracts via
  * {@link ContractRepository#findByTenantIdOrderByStartDateDesc} and sums their payments with the
- * include-archived aggregation ({@link PaymentRepository#sumPaidByContractIdInPeriodIncludingArchived}).
+ * include-archived aggregation ({@link PaymentRepository#sumPaidThroughDateByContractIdIn}).
  *
  * <p><b>Two guards against false positives.</b> (1) A period only counts for a contract that was in
  * effect on the period's due date ({@code startDate ≤ dueDate ≤ effectiveEnd}) — otherwise months
  * before the contract started or after it ended would each read as zero-paid and overdue. (2) The sum
- * includes archived payments, so a genuinely-paid archived period is not mistaken for non-payment.
+ * includes archived payments, so a genuinely-paid archived history is not mistaken for non-payment.
  *
  * <p>The dependencies mirror {@link OverdueService}: the {@link OverdueRule} is a pure value held as a
  * plain field; the repositories are injected as {@link ObjectProvider}s resolved per call so the bean
@@ -62,10 +71,11 @@ public class LatePayerService {
 	}
 
 	/**
-	 * @return the late-payer verdict for {@code tenantId}: the count of overdue (contract, period)
-	 *         events across the tenant's contracts in the last {@code windowMonths} fully-due periods,
-	 *         flagged when that count reaches {@code minEvents}. Returns an unflagged zero-count verdict
-	 *         for a tenant with no contracts or no payments.
+	 * @return the late-payer verdict for {@code tenantId}: the count of (contract, period) events —
+	 *         periods whose due date passed with the contract's cumulative balance still negative the
+	 *         next day — across the tenant's contracts in the last {@code windowMonths} fully-due
+	 *         periods, flagged when that count reaches {@code minEvents}. Returns an unflagged
+	 *         zero-count verdict for a tenant with no contracts or no payments.
 	 */
 	public LatePayerFlag evaluate(Long tenantId) {
 		int windowMonths = properties.windowMonths();
@@ -79,9 +89,9 @@ public class LatePayerService {
 		// matching JOIN FETCH to that finder or it will throw LazyInitializationException at runtime.
 		List<Contract> contracts = contracts().findByTenantIdOrderByStartDateDesc(tenantId);
 
-		// In-term (contract, period) candidates to judge, plus the contract ids touching each period.
+		// In-term (contract, period) candidates to judge, plus the contract ids sharing each due date.
 		List<Candidate> candidates = new ArrayList<>();
-		Map<YearMonth, List<Long>> idsByPeriod = new HashMap<>();
+		Map<LocalDate, List<Long>> idsByDueDate = new HashMap<>();
 		for (Contract contract : contracts) {
 			int day = contract.getPaymentDayOfMonth();
 			int grace = contract.getGraceDays();
@@ -95,31 +105,32 @@ public class LatePayerService {
 				if (contract.getStartDate().isAfter(due) || effectiveEnd.isBefore(due)) {
 					continue;
 				}
-				candidates.add(new Candidate(contract, period, due));
-				idsByPeriod.computeIfAbsent(period, p -> new ArrayList<>()).add(contract.getId());
+				candidates.add(new Candidate(contract, effectiveEnd, due));
+				idsByDueDate.computeIfAbsent(due, d -> new ArrayList<>()).add(contract.getId());
 			}
 		}
 		if (candidates.isEmpty()) {
 			return new LatePayerFlag(false, 0, windowMonths, minEvents);
 		}
 
-		// One include-archived aggregation per distinct period (never one-per-contract), keyed by
-		// (contractId, period) because a contract appears in several periods.
-		Map<ContractPeriod, BigDecimal> paidByKey = new HashMap<>();
-		idsByPeriod.forEach((period, ids) ->
-			payments().sumPaidByContractIdInPeriodIncludingArchived(ids, period.atDay(1), period.atEndOfMonth())
-				.forEach(sum -> paidByKey.put(new ContractPeriod(sum.getContractId(), period), sum.getPaidSum())));
+		// One include-archived cumulative aggregation per distinct due date (never one-per-contract):
+		// ≤ windowMonths queries per distinct payment-terms combination, keyed by (contractId, due)
+		// because a contract appears at several due dates.
+		Map<ContractDueDate, BigDecimal> paidByKey = new HashMap<>();
+		idsByDueDate.forEach((due, ids) ->
+			payments().sumPaidThroughDateByContractIdIn(ids, due)
+				.forEach(sum -> paidByKey.put(new ContractDueDate(sum.getContractId(), due), sum.getPaidSum())));
 
 		int eventCount = 0;
 		for (Candidate candidate : candidates) {
 			Contract contract = candidate.contract();
 			Instant asOf = candidate.due().plusDays(1).atStartOfDay(zone).toInstant();
-			BigDecimal paid = paidByKey.get(new ContractPeriod(contract.getId(), candidate.period()));
-			// Transitional: pin the cumulative rule to the single candidate period (its due date as
-			// the term start → exactly one period due) so the per-month aggregation above keeps its
-			// old meaning; the cumulative-through-due-date sums replace this pinning.
+			BigDecimal paid = paidByKey.get(new ContractDueDate(contract.getId(), candidate.due()));
+			// The rule re-derives the balance as it stood the day after the candidate's due date:
+			// every period owed through then vs. every payment dated on/before the due date.
 			boolean overdue = rule.evaluate(contract.getMonthlyRent(), contract.getPaymentDayOfMonth(),
-				contract.getGraceDays(), candidate.due(), null, paid, asOf, zone).overdue();
+				contract.getGraceDays(), contract.getStartDate(), candidate.effectiveEnd(), paid, asOf, zone)
+				.overdue();
 			if (overdue) {
 				eventCount++;
 			}
@@ -136,11 +147,11 @@ public class LatePayerService {
 		return paymentRepository.getObject();
 	}
 
-	/** One in-term (contract, period) pair to judge, carrying its precomputed due date. */
-	private record Candidate(Contract contract, YearMonth period, LocalDate due) {
+	/** One in-term (contract, period) pair to judge, carrying its precomputed accrual cap + due date. */
+	private record Candidate(Contract contract, LocalDate effectiveEnd, LocalDate due) {
 	}
 
-	/** Composite map key: a contract appears in several periods, so contractId alone won't do. */
-	private record ContractPeriod(Long contractId, YearMonth period) {
+	/** Composite map key: a contract appears at several due dates, so contractId alone won't do. */
+	private record ContractDueDate(Long contractId, LocalDate due) {
 	}
 }

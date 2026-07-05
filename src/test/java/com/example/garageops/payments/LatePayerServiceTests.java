@@ -16,9 +16,12 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
@@ -28,14 +31,17 @@ import com.example.garageops.contracts.ContractRepository;
 import com.example.garageops.payments.PaymentRepository.ContractPaidSum;
 
 /**
- * Verifies {@link LatePayerService} re-runs the pure {@link OverdueRule} over each contract's recent
- * fully-due periods and counts overdue (contract, period) events against the configured threshold —
- * mocked repositories, a fixed {@link Clock}, no Spring context (mirrors {@code OverdueServiceTests}).
+ * Verifies {@link LatePayerService} re-runs the cumulative {@link OverdueRule} at each in-term
+ * period's due date and counts the (contract, period) events — periods whose due date passed with
+ * the balance still negative the next day — against the configured threshold. Mocked repositories,
+ * a fixed {@link Clock}, no Spring context (mirrors {@code OverdueServiceTests}).
  *
  * <p>The clock is pinned to Warsaw on 2026-06-20, past the 15th-of-June due date for the fixture
  * (rent 250, day 10, grace 5), so the latest fully-due period is June 2026 and the default 6-month
- * window is Jan…Jun 2026. A period counts as overdue iff its contract is in term on the due date and
- * was not fully paid that month; the payment stub below models "fully paid" months per contract.
+ * window is Jan…Jun 2026. Payment history is modeled as a per-contract ledger (date → amount); the
+ * stub answers the cumulative-through-due-date aggregation by summing ledger entries on/before the
+ * queried date, so a month "paid on time" means its rent lands on its own due date and a skipped
+ * month leaves the running balance short at every later due date (the cascade).
  */
 class LatePayerServiceTests {
 
@@ -47,6 +53,8 @@ class LatePayerServiceTests {
 	// A contract in term across the whole window: starts well before Jan 2026, ends well after June.
 	private static final LocalDate FULL_START = LocalDate.of(2025, 1, 1);
 	private static final LocalDate FULL_END = LocalDate.of(2027, 1, 1);
+	// The first owed period of a FULL_START contract (due 2025-01-15 falls on/after the start date).
+	private static final YearMonth JAN_2025 = YearMonth.of(2025, 1);
 
 	private static final YearMonth JUN = YearMonth.of(2026, 6);
 	private static final YearMonth MAY = YearMonth.of(2026, 5);
@@ -77,8 +85,8 @@ class LatePayerServiceTests {
 	void belowThresholdIsNotFlagged() {
 		Contract c = contract(1L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
-		// Only June is unpaid → exactly one overdue event (minEvents - 1).
-		givenFullyPaid(Map.of(1L, Set.of(MAY, APR, MAR, FEB, JAN)));
+		// Every rent through May 2026 paid on its due date; June unpaid → exactly one event (minEvents - 1).
+		givenLedgers(Map.of(1L, paidOnTime(JAN_2025, MAY)));
 
 		LatePayerFlag flag = service.evaluate(7L);
 
@@ -92,8 +100,9 @@ class LatePayerServiceTests {
 	void atThresholdIsFlagged() {
 		Contract c = contract(1L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
-		// June and May unpaid → exactly two overdue events.
-		givenFullyPaid(Map.of(1L, Set.of(APR, MAR, FEB, JAN)));
+		// Paid on time through April; May and June never paid → the balance is short at both due
+		// dates → exactly two events.
+		givenLedgers(Map.of(1L, paidOnTime(JAN_2025, APR)));
 
 		LatePayerFlag flag = service.evaluate(7L);
 
@@ -106,10 +115,10 @@ class LatePayerServiceTests {
 		Contract a = contract(1L, FULL_START, FULL_END, null);
 		Contract b = contract(2L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(a, b));
-		// Both unpaid in June only; every other month paid for both.
-		givenFullyPaid(Map.of(
-			1L, Set.of(MAY, APR, MAR, FEB, JAN),
-			2L, Set.of(MAY, APR, MAR, FEB, JAN)));
+		// Both paid on time through May, both short in June only.
+		givenLedgers(Map.of(
+			1L, paidOnTime(JAN_2025, MAY),
+			2L, paidOnTime(JAN_2025, MAY)));
 
 		LatePayerFlag flag = service.evaluate(7L);
 
@@ -120,15 +129,18 @@ class LatePayerServiceTests {
 	@Test
 	void endedAndArchivedContractsBothContribute() {
 		// One ended contract (endedOn within the window) and one archived-but-still-returned contract;
-		// each is overdue in a different month, so together they reach the threshold. History must not
+		// each has exactly one late period, so together they reach the threshold. History must not
 		// vanish when a contract ends/archives (FR-021).
 		Contract ended = contract(1L, FULL_START, FULL_END, LocalDate.of(2026, 6, 30));
 		Contract archived = contract(2L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(ended, archived));
-		// ended unpaid in June; archived unpaid in May.
-		givenFullyPaid(Map.of(
-			1L, Set.of(MAY, APR, MAR, FEB, JAN),
-			2L, Set.of(JUN, APR, MAR, FEB, JAN)));
+		// ended: June never paid. archived: May's rent paid 5 days late (before June's due date), so
+		// May is its only late period — a late-but-eventually-paid event.
+		NavigableMap<LocalDate, BigDecimal> archivedLedger = paidOnTime(JAN_2025, JUN, MAY);
+		archivedLedger.merge(LocalDate.of(2026, 5, 20), RENT, BigDecimal::add);
+		givenLedgers(Map.of(
+			1L, paidOnTime(JAN_2025, MAY),
+			2L, archivedLedger));
 
 		LatePayerFlag flag = service.evaluate(7L);
 
@@ -139,12 +151,12 @@ class LatePayerServiceTests {
 	}
 
 	@Test
-	void anArchivedButFullyPaidPeriodIsNotAnEvent() {
-		// Guards the include-archived query: an archived contract whose periods were genuinely paid
-		// must not be flagged, even though archiving cascade-stamps its payments.
+	void anArchivedButFullyPaidHistoryHasNoEvents() {
+		// Guards the include-archived query: an archived contract whose rents were all genuinely paid
+		// on time must not be flagged, even though archiving cascade-stamps its payments.
 		Contract archived = contract(1L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(archived));
-		givenFullyPaid(Map.of(1L, Set.of(JUN, MAY, APR, MAR, FEB, JAN))); // every in-window period paid
+		givenLedgers(Map.of(1L, paidOnTime(JAN_2025, JUN))); // every owed rent on its due date
 
 		LatePayerFlag flag = service.evaluate(7L);
 
@@ -155,28 +167,26 @@ class LatePayerServiceTests {
 	@Test
 	void periodsOutsideTheContractTermAreNotCounted() {
 		// In term only Feb–May (started 2026-02-10, ended 2026-05-31): Jan is pre-start and June is
-		// post-end, so neither can be an overdue event even though every month is unpaid.
+		// post-end, so neither can be an event even though nothing was ever paid.
 		Contract c = contract(1L, LocalDate.of(2026, 2, 10), FULL_END, LocalDate.of(2026, 5, 31));
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
-		givenFullyPaid(Map.of()); // nothing paid
+		givenLedgers(Map.of()); // nothing paid
 
 		LatePayerFlag flag = service.evaluate(7L);
 
 		assertThat(flag.eventCount()).isEqualTo(4); // Feb, Mar, Apr, May — not Jan, not June
-		// Out-of-term months are never even queried.
-		verify(paymentRepository, never())
-			.sumPaidByContractIdInPeriodIncludingArchived(any(), eq(JAN.atDay(1)), any());
-		verify(paymentRepository, never())
-			.sumPaidByContractIdInPeriodIncludingArchived(any(), eq(JUN.atDay(1)), any());
+		// Out-of-term due dates are never even queried.
+		verify(paymentRepository, never()).sumPaidThroughDateByContractIdIn(any(), eq(dueDate(JAN)));
+		verify(paymentRepository, never()).sumPaidThroughDateByContractIdIn(any(), eq(dueDate(JUN)));
 	}
 
 	@Test
 	void aThinHistoryEvaluatesOnlyInTermPeriods() {
-		// Two months of history (started 2026-05-10): only May and June are in term. May paid, June
-		// unpaid → a single event, below threshold — not flagged on thin history alone.
+		// Two months of history (started 2026-05-10): only May and June are in term. May paid on its
+		// due date, June unpaid → a single event, below threshold — not flagged on thin history alone.
 		Contract c = contract(1L, LocalDate.of(2026, 5, 10), FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
-		givenFullyPaid(Map.of(1L, Set.of(MAY)));
+		givenLedgers(Map.of(1L, paidOnTime(MAY, MAY)));
 
 		LatePayerFlag flag = service.evaluate(7L);
 
@@ -188,24 +198,57 @@ class LatePayerServiceTests {
 	void theWindowIncludesTheOldestPeriodButNothingBeyondIt() {
 		Contract c = contract(1L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
-		// Unpaid only in Jan 2026 (the 6th and oldest in-window period); everything else paid.
-		givenFullyPaid(Map.of(1L, Set.of(JUN, MAY, APR, MAR, FEB)));
+		// Late only in Jan 2026 (the 6th and oldest in-window period): its rent lands 5 days late but
+		// before Feb's due date, so Jan is the only period whose due date passes with a short balance.
+		NavigableMap<LocalDate, BigDecimal> ledger = paidOnTime(JAN_2025, JUN, JAN);
+		ledger.merge(LocalDate.of(2026, 1, 20), RENT, BigDecimal::add);
+		givenLedgers(Map.of(1L, ledger));
 
 		LatePayerFlag flag = service.evaluate(7L);
 
 		assertThat(flag.eventCount()).isEqualTo(1); // Jan is inside the window
-		verify(paymentRepository)
-			.sumPaidByContractIdInPeriodIncludingArchived(anyList(), eq(JAN.atDay(1)), eq(JAN.atEndOfMonth()));
-		// Dec 2025 is one month beyond the window and is never queried.
-		verify(paymentRepository, never())
-			.sumPaidByContractIdInPeriodIncludingArchived(any(), eq(DEC_2025.atDay(1)), any());
+		verify(paymentRepository).sumPaidThroughDateByContractIdIn(anyList(), eq(dueDate(JAN)));
+		// Dec 2025 is one month beyond the window and its due date is never queried.
+		verify(paymentRepository, never()).sumPaidThroughDateByContractIdIn(any(), eq(dueDate(DEC_2025)));
+	}
+
+	@Test
+	void aLateButEventuallyPaidMonthCountsAsOneEvent() {
+		// March's rent arrives 5 days late (after due(Mar), before due(Apr)); everything else on time.
+		// The balance was short the day after March's due date → exactly one event, and clearing the
+		// arrears doesn't erase it — but one late month alone stays below the threshold.
+		Contract c = contract(1L, FULL_START, FULL_END, null);
+		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
+		NavigableMap<LocalDate, BigDecimal> ledger = paidOnTime(JAN_2025, JUN, MAR);
+		ledger.merge(LocalDate.of(2026, 3, 20), RENT, BigDecimal::add);
+		givenLedgers(Map.of(1L, ledger));
+
+		LatePayerFlag flag = service.evaluate(7L);
+
+		assertThat(flag.flagged()).isFalse();
+		assertThat(flag.eventCount()).isEqualTo(1);
+	}
+
+	@Test
+	void persistentArrearsCascadeIntoAnEventPerPeriod() {
+		// February skipped and never caught up: every later rent arrives on time but credits the
+		// oldest debt first (FIFO), so the balance is short at every subsequent due date — an event
+		// per in-window period from February on. Persistent arrears must trip the flag.
+		Contract c = contract(1L, FULL_START, FULL_END, null);
+		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
+		givenLedgers(Map.of(1L, paidOnTime(JAN_2025, JUN, FEB)));
+
+		LatePayerFlag flag = service.evaluate(7L);
+
+		assertThat(flag.flagged()).isTrue();
+		assertThat(flag.eventCount()).isEqualTo(5); // Feb, Mar, Apr, May, Jun
 	}
 
 	@Test
 	void theConfiguredThresholdIsRespected() {
 		Contract c = contract(1L, FULL_START, FULL_END, null);
 		given(contractRepository.findByTenantIdOrderByStartDateDesc(7L)).willReturn(List.of(c));
-		givenFullyPaid(Map.of(1L, Set.of(APR, MAR, FEB, JAN))); // June and May unpaid → 2 events
+		givenLedgers(Map.of(1L, paidOnTime(JAN_2025, APR))); // May and June unpaid → 2 events
 
 		LatePayerFlag flag = serviceWith(new LatePayerProperties(3, 6)).evaluate(7L);
 
@@ -222,27 +265,45 @@ class LatePayerServiceTests {
 
 		assertThat(flag.flagged()).isFalse();
 		assertThat(flag.eventCount()).isZero();
-		verify(paymentRepository, never())
-			.sumPaidByContractIdInPeriodIncludingArchived(any(), any(), any());
+		verify(paymentRepository, never()).sumPaidThroughDateByContractIdIn(any(), any());
 	}
 
-	// Stub the include-archived aggregation from a map of contractId → set of fully-paid periods. For a
-	// queried (period, ids) call, a contract present for that period returns a RENT-sized paid sum (not
-	// overdue); any contract absent for that period is omitted from the result (treated as paid-zero by
-	// the rule → overdue).
-	private void givenFullyPaid(Map<Long, Set<YearMonth>> paidPeriodsByContract) {
-		given(paymentRepository.sumPaidByContractIdInPeriodIncludingArchived(anyList(), any(), any()))
+	// Stub the cumulative include-archived aggregation from per-contract payment ledgers
+	// (date → amount): a queried (ids, through) call answers, per contract, the sum of its ledger
+	// entries dated on/before `through`; a contract with no such entries is omitted from the result
+	// (treated as paid-zero by the rule), mirroring SUM ... GROUP BY.
+	private void givenLedgers(Map<Long, NavigableMap<LocalDate, BigDecimal>> ledgers) {
+		given(paymentRepository.sumPaidThroughDateByContractIdIn(anyList(), any()))
 			.willAnswer(invocation -> {
 				List<Long> ids = invocation.getArgument(0);
-				YearMonth period = YearMonth.from((LocalDate) invocation.getArgument(1));
+				LocalDate through = invocation.getArgument(1);
 				List<ContractPaidSum> sums = new ArrayList<>();
 				for (Long id : ids) {
-					if (paidPeriodsByContract.getOrDefault(id, Set.of()).contains(period)) {
-						sums.add(paidSum(id, RENT));
+					Map<LocalDate, BigDecimal> paid = ledgers
+						.getOrDefault(id, Collections.emptyNavigableMap()).headMap(through, true);
+					if (!paid.isEmpty()) {
+						sums.add(paidSum(id, paid.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add)));
 					}
 				}
 				return sums;
 			});
+	}
+
+	// A ledger paying RENT on each period's due date from `from` through `to`, except the `skipped`
+	// months — the on-time baseline tests then perturb with late entries via merge().
+	private static NavigableMap<LocalDate, BigDecimal> paidOnTime(YearMonth from, YearMonth to, YearMonth... skipped) {
+		Set<YearMonth> skip = Set.of(skipped);
+		NavigableMap<LocalDate, BigDecimal> ledger = new TreeMap<>();
+		for (YearMonth month = from; !month.isAfter(to); month = month.plusMonths(1)) {
+			if (!skip.contains(month)) {
+				ledger.merge(dueDate(month), RENT, BigDecimal::add);
+			}
+		}
+		return ledger;
+	}
+
+	private static LocalDate dueDate(YearMonth period) {
+		return period.atDay(DAY).plusDays(GRACE);
 	}
 
 	// A mocked Contract so its surrogate id is controllable (a DB-free entity has no id) and the rule

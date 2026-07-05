@@ -492,22 +492,22 @@ persistent-arrears cascades now count) — mention this to the owner on rollout.
 
 #### Automated
 
-- [x] 2.1 Service tests pass: `mvnw.cmd test -Dtest=OverdueServiceTests`
-- [x] 2.2 Full suite green: `mvnw.cmd test`
+- [x] 2.1 Service tests pass: `mvnw.cmd test -Dtest=OverdueServiceTests` — 752518e
+- [x] 2.2 Full suite green: `mvnw.cmd test` — 752518e
 
 #### Manual
 
-- [x] 2.3 Reproduction scenario shows no overdue on Dashboard/Dues
-- [x] 2.4 Skipped-month contract stays on Dues with one rent outstanding
-- [x] 2.5 Ended-with-debt contract stays on Dues until settled; settling (or archiving) removes it
+- [x] 2.3 Reproduction scenario shows no overdue on Dashboard/Dues — 752518e
+- [x] 2.4 Skipped-month contract stays on Dues with one rent outstanding — 752518e
+- [x] 2.5 Ended-with-debt contract stays on Dues until settled; settling (or archiving) removes it — 752518e
 
 ### Phase 3: Late-payer flag
 
 #### Automated
 
-- [ ] 3.1 Late-payer tests pass: `mvnw.cmd test -Dtest=LatePayerServiceTests`
-- [ ] 3.2 Full build green: `mvnw.cmd verify`
+- [x] 3.1 Late-payer tests pass: `mvnw.cmd test -Dtest=LatePayerServiceTests`
+- [x] 3.2 Full build green: `mvnw.cmd verify`
 
 #### Manual
 
-- [ ] 3.3 Tenant profile shows 1 late event / not flagged for the reproduction scenario
+- [x] 3.3 Tenant profile shows 1 late event / not flagged for the reproduction scenario
