@@ -1,7 +1,7 @@
 ---
 change_id: overdue-cumulative-balance
 title: Compute overdue from cumulative balance instead of payment-date windows
-status: implemented
+status: impl_reviewed
 created: 2026-07-05
 updated: 2026-07-05
 archived_at: null
